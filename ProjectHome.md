@@ -1,0 +1,1 @@
+libspotify api implementation for Centrafuse interface
