@@ -8,7 +8,7 @@ namespace SpotiFire.SpotifyLib
         internal static readonly object Mutex = new object();
 
         #region Constraints
-        public const int SPOTIFY_API_VERSION = 11;
+        public const int SPOTIFY_API_VERSION = 11;      //LK, 11-jun-2016: Updated the library from V11 to V12 (and back again, because sp_session_process_events() crashes with an access violation after loggin in.
         public const int STRINGBUFFER_SIZE = 256;
         #endregion
 
@@ -298,7 +298,6 @@ namespace SpotiFire.SpotifyLib
         /// <returns>A user. The object is owned by the session so the caller should not release it.</returns>
         [DllImport("libspotify")]
         internal static extern IntPtr sp_session_friend(IntPtr sessionPtr, int index);
-        #endregion
 
 /// <summary>
         /// Get currently logged in users country
@@ -319,8 +318,8 @@ namespace SpotiFire.SpotifyLib
         /// <param name="connectionType">Connection type</param>
         [DllImport("libspotify")]
         internal static extern void sp_session_set_connection_type(IntPtr sessionPtr, ConnectionType connectionType);
+        #endregion
         
-
         #region Links (Spotify URIs)
         /// <summary>
         /// Create a Spotify link given a string.
@@ -444,7 +443,16 @@ namespace SpotiFire.SpotifyLib
         /// <param name="trackPtr"></param>
         /// <returns></returns>
         [DllImport("libspotify")]
-        internal static extern TrackAvailablity sp_track_get_availability(IntPtr sessionPtr, IntPtr trackPtr);
+        internal static extern TrackAvailability sp_track_get_availability(IntPtr sessionPtr, IntPtr trackPtr);
+
+        //LK, 11-jun-2016: Added OffLineStatus  (new in V12)
+        /// <summary>
+        /// Return Offline Status of the track
+        /// </summary>
+        /// <param name="trackPtr"></param>
+        /// <returns></returns>
+        [DllImport("libspotify")]
+        internal static extern TrackOfflineStatus sp_track_offline_get_status(IntPtr trackPtr);
 
         /// <summary>
         /// Return true if the track is a placeholder. Placeholder tracks are used
@@ -1888,7 +1896,7 @@ public enum ToplistSpecialRegion
 
         /// <summary>
         /// Only return data about the artist (artist name, similar artist biography, etc.
-        /// No tracks or album will be abailable. sp_artistbrowse_num_tracks() and sp_artistbrowse_num_albums() will both return 0.
+        /// No tracks or album will be available. sp_artistbrowse_num_tracks() and sp_artistbrowse_num_albums() will both return 0.
         /// </summary>
         NO_ALBUMS = 2
     }
@@ -1949,12 +1957,24 @@ public enum PlaylistOfflineStatus
         Wired = 5
     }
 
-    public enum TrackAvailablity
+    public enum TrackAvailability   //LK, 11-jun-2016: Typo in name corrected
     {
         Unavailable = 0,
         Available = 1,
         NotStreamable = 2,
         BannedByArtist = 3
+    }
+
+    public enum TrackOfflineStatus
+    {
+        No = 0,
+        Waiting = 1,
+        Downloading = 2,
+        Done = 3,
+        Error = 4,
+        DoneExpired = 5,
+        LimitExceeded = 6,
+        DoneResync = 7,
     }
     #endregion
 }

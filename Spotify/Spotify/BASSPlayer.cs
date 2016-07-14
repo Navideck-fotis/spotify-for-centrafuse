@@ -12,8 +12,25 @@ namespace Spotify
         {
             Paused = true;
         }
-        
-        private int channel = -1;
+
+        //LK, 22-may-2016, Begin: Add callback to handle changed channel
+        public event ChannelChangedDelegate ChannelChangedEvent;
+        public delegate void ChannelChangedDelegate (int newChannel);
+
+        private int _channel = -1;
+        private int channel
+        {
+            get { return _channel; }
+            set 
+            {
+                _channel = value;
+
+                    if (ChannelChangedEvent != null)
+                        ChannelChangedEvent (_channel);
+            }
+        }
+        //LK, 22-may-2016, End: Add callback to handle changed channel
+
         public int EnqueueSamples(int channels, int rate, byte[] samples, int frames)
         {
             if (stopped)
@@ -38,6 +55,7 @@ namespace Spotify
         {
             if (channel != -1)
             {
+                //TODO: LK: Add cross-over function
                 Bass.BASS_ChannelStop(channel);
                 Bass.BASS_StreamFree(channel);
                 channel = -1;

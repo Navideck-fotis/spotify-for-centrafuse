@@ -1,13 +1,59 @@
 ﻿<APPLANG>
   <SPOTIFY>
     <DISPLAYNAME>Spotify</DISPLAYNAME>
+    <DESCRIPTION>Spotify client for Centrafuse</DESCRIPTION>
+    <RESTORINGNOWPLAYLIST>Restoring "Now Playlist" list</RESTORINGNOWPLAYLIST>
+    <FAILEDTORESTORENOWPLAYLIST>"Failed to restore "Now Playing" list: "</FAILEDTORESTORENOWPLAYLIST>
+    <PLEASEWAIT>Please wait...</PLEASEWAIT>
+    <CONNECTING>Connecting to Spotify</CONNECTING>
+    <LOGGINGIN>Logging in</LOGGINGIN>
+    <SEARCHFOR>Search for:</SEARCHFOR>
+    <USENAMENOTSPECIFIED>Username not specified</USENAMENOTSPECIFIED>
+    <SONGS>Songs</SONGS>
+    <ALBUMS>Albums</ALBUMS>
+    <ARTISTS>Artists</ARTISTS>
+    <PLAYLISTS>Playlists</PLAYLISTS>
+    <STARREDSONGS>Your starred songs</STARREDSONGS>
+    <RETRIEVETOPLISTOF>Retrieve Top List Of:</RETRIEVETOPLISTOF>
+    <RETRIEVEINBOXOF>Retrieve Inbox of:</RETRIEVEINBOXOF>
+    <CANTADDMULTIPLEALBUMS>Can't add multiple albums at once</CANTADDMULTIPLEALBUMS>
+    <CANTADDMULTIPLEARTISTS>Can't add multiple artists at once</CANTADDMULTIPLEARTISTS>
+    <CANTADDMULTIPLEPLAYLISTS>Can't add multiple playlists at once</CANTADDMULTIPLEPLAYLISTS>
+    <CONFIRMCLEARPLAYLIST>Are you sure you want to clear your playlist?</CONFIRMCLEARPLAYLIST>
+    <CONFIRMOFFLINEPLAYLIST>Would you like to make this playlist available offline?</CONFIRMOFFLINEPLAYLIST>
+    <CONFIRMUNAVAILOFFLINEPLAYLIST>This playlist will no longer be available offline. Proceed?</CONFIRMUNAVAILOFFLINEPLAYLIST>
+    <NOOFFLINETRACKSAVAILABLE>No tracks available offline</NOOFFLINETRACKSAVAILABLE>
+    <TRACKNOTAVAILABLEOFFLINE>Current track is not (or no longer) offline available</TRACKNOTAVAILABLEOFFLINE>
+    <CONFIRMADDMULTIPLETRACKS>You are about to add {0} tracks.{1} Are you sure?</CONFIRMADDMULTIPLETRACKS>
+    <OPERATIONTIMEDOUT>Operation timed out, please try again</OPERATIONTIMEDOUT>
+    <PLAYTOKENLOST>Your account is used somewere else; playbak Paused</PLAYTOKENLOST>
+    <NOTLOGGEDIN>You are not logged in</NOTLOGGEDIN>
+    <NEEDTOBEONLINE>You need to be online</NEEDTOBEONLINE>
+    <SEARCHING>Searching...</SEARCHING>
+    <SEARCHBYSONGNAME>Search by song name</SEARCHBYSONGNAME>
+    <SEARCHBYALBUMNAME>Search by album name</SEARCHBYALBUMNAME>
+    <SEARCHBYARTISTNAME>Search by artist name</SEARCHBYARTISTNAME>
+    <SEARCHBYPLAYLISTNAME>Search by playlist name</SEARCHBYPLAYLISTNAME>
+    <RETRIEVINGINBOX>Retrieving your inbox</RETRIEVINGINBOX>
+    <RETRIEVINGSTARREDSONGS>Retrieving your starred songs</RETRIEVINGSTARREDSONGS>
+    <RETRIEVINGPLAYLISTS>Retrieving your playlists</RETRIEVINGPLAYLISTS>
+    <RETRIEVINGTOPLIST>Retrieving Top List</RETRIEVINGTOPLIST>
+    <DOWNLOADING>downloading</DOWNLOADING>
+    <ONLINE>on-line</ONLINE>
+    <QUEUED>queued</QUEUED>
+    <OFFLINE>off-line</OFFLINE>
+    <CANCEL>Cancel</CANCEL>
   </SPOTIFY>
   <SETUP>
     <TITLE>Spotify</TITLE>
     <USERNAME>User Name</USERNAME>
     <PASSWORD>Password</PASSWORD>
     <BITRATE>Preferred Bitrate</BITRATE>
-    <AUTOPLAY>Auto Play On Show</AUTOPLAY>
+    <AUTOPLAY>Auto Play</AUTOPLAY>
+    <AUTOLOOP>Auto Loop on end of Playlist</AUTOLOOP>
     <LOCATION>Spotify data folder location</LOCATION>
+    <SELECTDATAFOLDER>Choose a folder for Spotify data</SELECTDATAFOLDER>
+    <POWERRESUMEDELAY>Delay after resume from sleep mode</POWERRESUMEDELAY>
+    <LOGEVENTS>Log events</LOGEVENTS>
   </SETUP>
 </APPLANG>

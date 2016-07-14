@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Runtime.InteropServices;
@@ -53,6 +53,9 @@ namespace SpotiFire.SpotifyLib
         private delegate void offline_status_updated_delegate(IntPtr sessionPtr);
         private delegate void offline_error_delegate(IntPtr sessionPtr, sp_error error);
         private delegate void credentials_blob_updated_delegate(IntPtr sessionPtr, string blob);
+        private delegate void connectionstate_updated_delegate(IntPtr sessionPtr);                      //LK, 11-jun-2016: Added missing session events
+        private delegate void scrobble_error_updated_delegate(IntPtr sessionPtr, sp_error error);       //LK, 11-jun-2016: Added missing session events
+        private delegate void private_session_mode_changed_delegate(IntPtr sessionPtr, bool isPrivate); //LK, 11-jun-2016: Added missing session events
         #endregion
 
         #region Spotify Event Handlers
@@ -74,6 +77,9 @@ namespace SpotiFire.SpotifyLib
         private static offline_status_updated_delegate offline_status_updated = new offline_status_updated_delegate(OfflineStatusUpdatedCallback);
         private static offline_error_delegate offline_error = new offline_error_delegate(OfflineErrorCallback);
         private static credentials_blob_updated_delegate credentials_blob_updated = new credentials_blob_updated_delegate(CredentialsBlobUpdatedCallback);
+        private static connectionstate_updated_delegate connectionstate_updated = new connectionstate_updated_delegate(ConnectionstateUpdatedCallback);                     //LK, 11-jun-2016: Added missing session events
+        private static scrobble_error_updated_delegate scrobble_error_updated = new scrobble_error_updated_delegate(ScrobbleErrorUpdatedCallback);                          //LK, 11-jun-2016: Added missing session events
+        private static private_session_mode_changed_delegate private_session_mode_changed = new private_session_mode_changed_delegate(PrivateSessionModeChangedCallback);   //LK, 11-jun-2016: Added missing session events
         #endregion
 
         #region Properties
@@ -121,7 +127,10 @@ namespace SpotiFire.SpotifyLib
                     config.application_key_size = applicationKey.Length;
 
                 sessionPtr = IntPtr.Zero;
-                sp_error res = libspotify.sp_session_create(ref config, out sessionPtr);
+                sp_error res;
+
+                lock(libspotify.Mutex)
+                    res = libspotify.sp_session_create(ref config, out sessionPtr);
 
                 if (res != sp_error.OK)
                     throw new SpotifyException(res);
@@ -303,7 +312,8 @@ namespace SpotiFire.SpotifyLib
                 return;
 
             if ((s.ConnectionState == sp_connectionstate.LOGGED_IN || s.ConnectionState == sp_connectionstate.OFFLINE) && error == sp_error.OK)
-                s.playlistContainer = SpotifyLib.PlaylistContainer.Get(s, libspotify.sp_session_playlistcontainer(sessionPtr));
+                lock (libspotify.Mutex)
+                    s.playlistContainer = SpotifyLib.PlaylistContainer.Get(s, libspotify.sp_session_playlistcontainer(sessionPtr));
 
             s.EnqueueEventWorkItem(new EventWorkItem(CreateDelegate<SessionEventArgs>(se => se.OnLoginComplete, s), new SessionEventArgs(error)));
         }
@@ -470,6 +480,27 @@ namespace SpotiFire.SpotifyLib
             Session s = GetSession(sessionPtr);
             // TODO: Implement
         }
+
+        //LK, 11-jun-2016: Added missing session events
+        private static void ConnectionstateUpdatedCallback(IntPtr sessionPtr)
+        {
+            Session s = GetSession(sessionPtr);
+            s.EnqueueEventWorkItem(new EventWorkItem(CreateDelegate<SessionEventArgs>(se => se.OnConnectionstateUpdated, s), new SessionEventArgs()));
+        }
+
+        //LK, 11-jun-2016: Added missing session events
+        private static void ScrobbleErrorUpdatedCallback(IntPtr sessionPtr, sp_error error)
+        {
+            Session s = GetSession(sessionPtr);
+            // TODO: Implement
+        }
+
+        //LK, 11-jun-2016: Added missing session events
+        private static void PrivateSessionModeChangedCallback(IntPtr sessionPtr, bool isPrivate)
+        {
+            Session s = GetSession(sessionPtr);
+            s.EnqueueEventWorkItem(new EventWorkItem(CreateDelegate<SessionEventArgs>(se => se.OnPrivateSessionModeChanged, s), new SessionEventArgs()));
+        }
         #endregion
 
         #region Session Events
@@ -557,6 +588,20 @@ namespace SpotiFire.SpotifyLib
             if (this.StopPlayback != null)
                 this.StopPlayback(this, args);
         }
+
+        //LK, 11-jun-2016: Added missing session events
+        protected virtual void OnConnectionstateUpdated(SessionEventArgs args)
+        {
+            if (this.ConnectionstateUpdated != null)
+                this.ConnectionstateUpdated(this, args);
+        }
+
+        //LK, 11-jun-2016: Added missing session events
+        protected virtual void OnPrivateSessionModeChanged(SessionEventArgs args)
+        {
+            if (this.PrivateSessionModeChanged != null)
+                this.PrivateSessionModeChanged(this, args);
+        }
         #endregion
 
         #region Events
@@ -574,6 +619,8 @@ namespace SpotiFire.SpotifyLib
         public event SessionEventHandler UserinfoUpdated;
         public event SessionEventHandler StartPlayback;
         public event SessionEventHandler StopPlayback;
+        public event SessionEventHandler ConnectionstateUpdated;        //LK, 11-jun-2016: Added missing session events
+        public event SessionEventHandler PrivateSessionModeChanged;     //LK, 11-jun-2016: Added missing session events
         #endregion
 
         #region Properties

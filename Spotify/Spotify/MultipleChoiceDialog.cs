@@ -39,7 +39,7 @@ namespace Spotify
             base.CF3_initDialog("MultipleChoiceDialog");
             CF_updateText("Spotify.TitleLabel", title);
             var cancelButton = buttonArray[CF_getButtonID("Spotify.Cancel")];
-            cancelButton.Text = "Cancel";
+            cancelButton.Text = this.pluginLang.ReadField("/APPLANG/SPOTIFY/CANCEL");
             cancelButton.buttonText = true;
 
             for (int i = 1; i <= 5; i++)

@@ -10,6 +10,7 @@ using centrafuse.Plugins;
 
 namespace Spotify
 {
+	//LK, 22-may-2016, General: Add support for full function visuals, including album art
     public partial class Spotify
     {
         private string currentImageId;
@@ -18,7 +19,7 @@ namespace Spotify
         {
             currentImageId = imageId;
             
-            CF_clearPictureImage("pictureBox");
+            CF_clearPictureImage("AlbumArt");
             if (currentImage != null)
                 currentImage.Dispose();
 
@@ -45,17 +46,19 @@ namespace Spotify
                             var imageObject = image.GetImage();
                             if (imageId.Equals(currentImageId))
                             {
-                                imageObject = ResizeToFitBox(imageObject);
                                 this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
                                 {
                                     if (imageId.Equals(currentImageId))
                                     {
                                         currentImage = imageObject;
-                                        CF_setPictureImage("pictureBox", imageObject);
+                                        //---   CF_setPictureImage("AlbumArt", imageObject);
+                                        SetVisImage(imageObject, imageId);
+                                        imageObject = ResizeToFitBox(imageObject,CF_pluginGetVisBounds());
                                     }
                                     else
                                     {
                                         imageObject.Dispose();
+                                        SetVisImage(null, string.Empty);
                                     }
                                 }));
                             }
@@ -70,24 +73,26 @@ namespace Spotify
             }
         }
 
-        private const int pictureBoxSize = 113;
-        private Image ResizeToFitBox(Image imageObject)
+        
+        private Image ResizeToFitBox(Image imageObject, Rectangle albumArtBounds)
         {
+            int albumArtSize = albumArtBounds.Width;
+
             Rectangle drawRectangle;
             if (imageObject.Width > imageObject.Height)
             {
-                double factor = (double)pictureBoxSize / imageObject.Width;
+                double factor = (double)albumArtSize / imageObject.Width;
                 int resizeHeight = (int)Math.Ceiling(imageObject.Height * factor);
-                drawRectangle = new Rectangle(0, (pictureBoxSize - resizeHeight) / 2, pictureBoxSize, resizeHeight);
+                drawRectangle = new Rectangle(0, (albumArtSize - resizeHeight) / 2, albumArtSize, resizeHeight);
             }
             else
             {
-                double factor = (double)pictureBoxSize / imageObject.Height;
+                double factor = (double)albumArtSize / imageObject.Height;
                 int resizeWidth = (int)Math.Ceiling(imageObject.Width * factor);
-                drawRectangle = new Rectangle((pictureBoxSize - resizeWidth) / 2, 0, resizeWidth, pictureBoxSize);
+                drawRectangle = new Rectangle((albumArtSize - resizeWidth) / 2, 0, resizeWidth, albumArtSize);
             }
 
-            Bitmap resized = new Bitmap(pictureBoxSize, pictureBoxSize);
+            Bitmap resized = new Bitmap(albumArtSize, albumArtSize);
             using (Graphics g = Graphics.FromImage(resized))
             {
                 g.Clear(Color.Black);

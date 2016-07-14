@@ -34,5 +34,7 @@ namespace SpotiFire.SpotifyLib
         event SessionEventHandler StopPlayback;
         event SessionEventHandler StreamingError;
         event SessionEventHandler UserinfoUpdated;
+        event SessionEventHandler ConnectionstateUpdated;       //LK, 11-jun-2016: Added missing session events
+        event SessionEventHandler PrivateSessionModeChanged;    //LK, 11-jun-2016: Added missing session events
     }
 }

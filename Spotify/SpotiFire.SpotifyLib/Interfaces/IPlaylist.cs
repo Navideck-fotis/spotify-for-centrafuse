@@ -13,7 +13,7 @@ namespace SpotiFire.SpotifyLib
         PlaylistOfflineStatus OfflineStatus { get; }
         void SetOfflineMode(bool offline);
         int OfflineDownloadProgress { get; }
-        bool IsLoaded { get; }
+        //LK, 11-jun-2016: Inherrited from IAsyncLoaded: //bool IsLoaded { get; }
 
 
         event PlaylistEventHandler<TracksAddedEventArgs> TracksAdded;

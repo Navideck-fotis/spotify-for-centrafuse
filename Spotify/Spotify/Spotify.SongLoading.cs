@@ -17,7 +17,7 @@ namespace Spotify
         {
             if (CheckLoggedInAndOnline())
             {
-                CF_systemCommand(CF_Actions.SHOWINFO, "Retrieving your inbox");
+                CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/RetrievingInBox"));
                 ThreadPool.QueueUserWorkItem(delegate(object obj)
                 {
                     IEnumerable<ITrack> inboxTracks = null;
@@ -56,7 +56,7 @@ namespace Spotify
         {
             if (CheckLoggedInAndOnline())
             {
-                CF_systemCommand(CF_Actions.SHOWINFO, "Retrieving your inbox");
+                CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/RetrievingInbox"));
                 ThreadPool.QueueUserWorkItem(delegate(object obj)
                 {
                     try
@@ -116,7 +116,7 @@ namespace Spotify
         {
             if (CheckLoggedInAndOnline())
             {
-                CF_systemCommand(CF_Actions.SHOWINFO, "Retrieving your inbox");
+                CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/RetrievingInBox"));
                 ThreadPool.QueueUserWorkItem(delegate(object obj)
                 {
                     try
@@ -191,7 +191,7 @@ namespace Spotify
         {
             if (CheckLoggedInAndOnline())
             {
-                CF_systemCommand(CF_Actions.SHOWINFO, "Retrieving your starred songs");
+                CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/RetrievingStarredSongs"));
                 ThreadPool.QueueUserWorkItem(delegate(object obj)
                 {
                     try
@@ -242,7 +242,7 @@ namespace Spotify
         {
             if (CheckLoggedIn())
             {
-                CF_systemCommand(CF_Actions.SHOWINFO, "Retrieving your playlists");
+                CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/RetrievingPlaylists"));
                 ThreadPool.QueueUserWorkItem(delegate(object obj)
                 {
                     try
@@ -252,7 +252,7 @@ namespace Spotify
                         {
                             var container = SpotifySession.PlaylistContainer;
 
-                            SleepUntilTrue(() => container.IsLoaded);
+                            //LK, 11-jun-2016: Not required to be loaded (use off-line data when not loaded) SleepUntilTrue(() => container..IsLoaded);
 
                             playlists = container.Playlists.Cast<IPlaylist>();
                         }
@@ -305,7 +305,7 @@ namespace Spotify
         {
             if (CheckLoggedInAndOnline())
             {
-                CF_systemCommand(CF_Actions.SHOWINFO, "Retrieving Top List");
+                CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/RetrievingTopList"));
                 ThreadPool.QueueUserWorkItem(delegate(object obj)
                 {
                     try
@@ -351,7 +351,7 @@ namespace Spotify
         {
             if (CheckLoggedInAndOnline())
             {
-                CF_systemCommand(CF_Actions.SHOWINFO, "Retrieving Top List");
+                CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/RetrievingTopList"));
                 ThreadPool.QueueUserWorkItem(delegate(object obj)
                 {
                     try
@@ -397,7 +397,7 @@ namespace Spotify
         {
             if (CheckLoggedInAndOnline())
             {
-                CF_systemCommand(CF_Actions.SHOWINFO, "Retrieving Top List");
+                CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/RetrievingTopList"));
                 ThreadPool.QueueUserWorkItem(delegate(object obj)
                 {
                     try
@@ -443,37 +443,42 @@ namespace Spotify
         {
             if (CheckLoggedInAndOnline())
             {
-                CFDialogParams searchDialogParams = new CFDialogParams("Search by song name");
+                CFDialogParams searchDialogParams = new CFDialogParams(pluginLang.ReadField("/AppLang/Spotify/SearchBySongName"));
                 CFDialogResults results = new CFDialogResults();
                 DialogResult result = CF_displayDialog(CF_Dialogs.OSK, searchDialogParams, results);
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
                     string searchText = results.resultvalue;
-                    CF_systemCommand(CF_Actions.SHOWINFO, "Searching...");
+                    CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/Searching"));
                     ThreadPool.QueueUserWorkItem(delegate(object param)
                     {
                         try
                         {
                             var search = SpotifySession.SearchTracks(searchText, 0, 20);
 
-                            SleepUntilTrue(() => search.IsComplete);
-
-                            List<ITrack> tracks = new List<ITrack>();
-                            foreach (var track in search.Tracks)
+                            if (search != null) //LK, 22-may-2016: When no search text supplied
                             {
-                                if (track.IsAvailable)
+                                SleepUntilTrue(() => search.IsComplete);
+
+                                List<ITrack> tracks = new List<ITrack>();
+                                foreach (var track in search.Tracks)
                                 {
-                                    tracks.Add(track);
+                                    if (track.IsAvailable)
+                                    {
+                                        tracks.Add(track);
+                                    }
                                 }
-                            }
-                            search.Dispose();
-                            var table = LoadTracksIntoTable(tracks);
+                                search.Dispose();
+                                var table = LoadTracksIntoTable(tracks);
 
-                            this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
-                            {
+                                this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
+                                {
+                                    CF_systemCommand(CF_Actions.HIDEINFO);
+                                    SwitchToTab(Tabs.Search, GroupingType.Songs, table, "Search", null, true);
+                                }));
+                            }
+                            else
                                 CF_systemCommand(CF_Actions.HIDEINFO);
-                                SwitchToTab(Tabs.Search, GroupingType.Songs, table, "Search", null, true);
-                            }));
                         }
                         catch (Exception ex)
                         {
@@ -493,37 +498,42 @@ namespace Spotify
         {
             if (CheckLoggedInAndOnline())
             {
-                CFDialogParams searchDialogParams = new CFDialogParams("Search by album name");
+                CFDialogParams searchDialogParams = new CFDialogParams(pluginLang.ReadField("/AppLang/Spotify/SearchByAlbumName"));
                 CFDialogResults results = new CFDialogResults();
                 DialogResult result = CF_displayDialog(CF_Dialogs.OSK, searchDialogParams, results);
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
                     string searchText = results.resultvalue;
-                    CF_systemCommand(CF_Actions.SHOWINFO, "Searching...");
+                    CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/Searching"));
                     ThreadPool.QueueUserWorkItem(delegate(object param)
                     {
                         try
                         {
                             var search = SpotifySession.SearchAlbums(searchText, 0, 20);
 
-                            SleepUntilTrue(() => search.IsComplete);
-
-                            List<IAlbum> albums = new List<IAlbum>();
-                            foreach (var album in search.Albums)
+                            if (search != null) //LK, 22-may-2016: When no search text supplied
                             {
-                                if (album.IsAvailable)
+                                SleepUntilTrue(() => search.IsComplete);
+
+                                List<IAlbum> albums = new List<IAlbum>();
+                                foreach (var album in search.Albums)
                                 {
-                                    albums.Add(album);
+                                    if (album.IsAvailable)
+                                    {
+                                        albums.Add(album);
+                                    }
                                 }
-                            }
-                            search.Dispose();
-                            var table = LoadAlbumsIntoTable(albums, false);
+                                search.Dispose();
+                                var table = LoadAlbumsIntoTable(albums, false);
 
-                            this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
-                            {
+                                this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
+                                {
+                                    CF_systemCommand(CF_Actions.HIDEINFO);
+                                    SwitchToTab(Tabs.Search, GroupingType.Albums, table, "Search", null, true);
+                                }));
+                            }
+                            else
                                 CF_systemCommand(CF_Actions.HIDEINFO);
-                                SwitchToTab(Tabs.Search, GroupingType.Albums, table, "Search", null, true);
-                            }));
                         }
                         catch (Exception ex)
                         {
@@ -543,34 +553,39 @@ namespace Spotify
         {
             if (CheckLoggedInAndOnline())
             {
-                CFDialogParams searchDialogParams = new CFDialogParams("Search by artist name");
+                CFDialogParams searchDialogParams = new CFDialogParams(pluginLang.ReadField("/AppLang/Spotify/SearchByArtistN"));
                 CFDialogResults results = new CFDialogResults();
                 DialogResult result = CF_displayDialog(CF_Dialogs.OSK, searchDialogParams, results);
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
                     string searchText = results.resultvalue;
-                    CF_systemCommand(CF_Actions.SHOWINFO, "Searching...");
+                    CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/Searching"));
                     ThreadPool.QueueUserWorkItem(delegate(object param)
                     {
                         try
                         {
                             var search = SpotifySession.SearchArtists(searchText, 0, 20);
 
-                            SleepUntilTrue(() => search.IsComplete);
-
-                            List<IArtist> artists = new List<IArtist>();
-                            foreach (var artist in search.Artists)
+                            if (search != null) //LK, 22-may-2016: When no search text supplied
                             {
-                                artists.Add(artist);
+                                SleepUntilTrue(() => search.IsComplete);
+
+                                List<IArtist> artists = new List<IArtist>();
+                                foreach (var artist in search.Artists)
+                                {
+                                    artists.Add(artist);
+                                }
+                                search.Dispose();
+                                var table = LoadArtistsIntoTable(artists);
+
+                                this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
+                                {
+                                    CF_systemCommand(CF_Actions.HIDEINFO);
+                                    SwitchToTab(Tabs.Search, GroupingType.Artists, table, "Search", null, true);
+                                }));
                             }
-                            search.Dispose();
-                            var table = LoadArtistsIntoTable(artists);
-
-                            this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
-                            {
+                            else
                                 CF_systemCommand(CF_Actions.HIDEINFO);
-                                SwitchToTab(Tabs.Search, GroupingType.Artists, table, "Search", null, true);
-                            }));
                         }
                         catch (Exception ex)
                         {
@@ -590,35 +605,40 @@ namespace Spotify
         {
             if (CheckLoggedInAndOnline())
             {
-                CFDialogParams searchDialogParams = new CFDialogParams("Search by playlist name");
+                CFDialogParams searchDialogParams = new CFDialogParams(pluginLang.ReadField("/AppLang/Spotify/SearchByPlaylistname"));
                 CFDialogResults results = new CFDialogResults();
                 DialogResult result = CF_displayDialog(CF_Dialogs.OSK, searchDialogParams, results);
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
                     string searchText = results.resultvalue;
-                    CF_systemCommand(CF_Actions.SHOWINFO, "Searching...");
+                    CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/Searching"));
                     ThreadPool.QueueUserWorkItem(delegate(object param)
                     {
                         try
                         {
                             var search = SpotifySession.SearchPlaylist(searchText, 0, 20);
 
-                            SleepUntilTrue(() => search.IsComplete);
-
-                            List<IPlaylist> playlists = new List<IPlaylist>();
-                            foreach (var playlist in search.Playlists)
+                            if (search != null) //LK, 22-may-2016: When no search text supplied
                             {
-                                playlists.Add(playlist);
+                                SleepUntilTrue(() => search.IsComplete);
+
+                                List<IPlaylist> playlists = new List<IPlaylist>();
+                                foreach (var playlist in search.Playlists)
+                                {
+                                    playlists.Add(playlist);
+                                }
+                                search.Dispose();
+
+                                var table = LoadPlaylistsIntoTable(playlists);
+
+                                this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
+                                {
+                                    CF_systemCommand(CF_Actions.HIDEINFO);
+                                    SwitchToTab(Tabs.Search, GroupingType.Playlists, table, "Search", null, true);
+                                }));
                             }
-                            search.Dispose();
-
-                            var table = LoadPlaylistsIntoTable(playlists);
-
-                            this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
-                            {
+                            else
                                 CF_systemCommand(CF_Actions.HIDEINFO);
-                                SwitchToTab(Tabs.Search, GroupingType.Playlists, table, "Search", null, true);
-                            }));
                         }
                         catch (Exception ex)
                         {
@@ -636,22 +656,32 @@ namespace Spotify
 
         private DataTable LoadTracksIntoTable(IEnumerable<ITrack> tracks)
         {
-            SleepUntilTrue(() => tracks.All(t => t.IsLoaded));
+            //LK, 11-jun-2016: Don't load partinional tables (until this is handled propely (load all, except placeholders and skip not loaded tracks)
+            if (SpotifySession == null || SpotifySession.ConnectionState == sp_connectionstate.LOGGED_IN)
+            {
+                SleepUntilTrue(() => tracks.All(t => t.IsLoaded));
+            }
+            else
+                if (!tracks.Any(t => t.IsAvailable))
+                    throw new Exception(pluginLang.ReadField("/AppLang/Spotify/NoOfflineTracksAvailable"));
+
 
             DataTable table = new DataTable();
             table.Columns.Add("Name", typeof(string));
             table.Columns.Add("Artist", typeof(string));
             table.Columns.Add("Album", typeof(string));
             table.Columns.Add("Starred", typeof(string));
+            table.Columns.Add("Available", typeof(string));     //LK, 11-jun-2016: Added to display offline/available/playing icons
             table.Columns.Add("TrackObject", typeof(ITrack));
 
-            foreach (var track in tracks.Where(t => t.IsAvailable && !t.IsPlaceholder))
+            foreach (var track in tracks.Where(t => /* t.IsAvailable && */ !t.IsPlaceholder))   //LK, 11-jun-2016: Added offline/available flag
             {
                 var newRow = table.NewRow();
                 newRow["Name"] = track.Name;
                 newRow["Artist"] = GetArtistsString(track.Artists);
                 newRow["Album"] = track.Album.Name;
                 newRow["Starred"] = GetStarredStatusString(track.IsStarred);
+                newRow["Available"] = GetAvailableStatusString( track.IsAvailable, false);    //LK, 11-jun-2016: Added offline/available flag
                 newRow["TrackObject"] = track;
                 table.Rows.Add(newRow);
             }
@@ -664,6 +694,11 @@ namespace Spotify
             return isStarred ? "starred_true" : "starred_false";
         }
 
+        private string GetAvailableStatusString(bool isAvailable, bool isPlaying)
+        {
+            return (isPlaying ? "available_playing" : (isAvailable ? "available_true" : "available_false"));
+        }
+
         private DataTable LoadAlbumsIntoTable(IEnumerable<IAlbum> albums, bool ignoreAvailability)
         {
             SleepUntilTrue(() => albums.All(a => a.IsLoaded));
@@ -671,6 +706,7 @@ namespace Spotify
             DataTable table = new DataTable();
             table.Columns.Add("Name", typeof(string));
             table.Columns.Add("Artist", typeof(string));
+            table.Columns.Add("Available", typeof(string));    //LK, 11-jun-2016: Added offline/available flag
             table.Columns.Add("AlbumObject", typeof(IAlbum));
 
             foreach (var album in albums.Where(a => ignoreAvailability ? true : a.IsAvailable))
@@ -678,6 +714,7 @@ namespace Spotify
                 var newRow = table.NewRow();
                 newRow["Name"] = album.Name;
                 newRow["Artist"] = album.Artist.Name;
+                newRow["Available"] = GetAvailableStatusString(album.IsAvailable, false);    //LK, 11-jun-2016: Added offline/available flag
                 newRow["AlbumObject"] = album;
                 table.Rows.Add(newRow);
             }
@@ -742,16 +779,17 @@ namespace Spotify
 
         private string GetPlaylistStatusString(IPlaylist playlist)
         {
+            //LK, Note: The strings returned are part of image names (.PNG), so they should not be translated
             switch (playlist.OfflineStatus)
             {
                 case PlaylistOfflineStatus.Downloading:
-                    return "downloading";
+                    return "Downloading";
                 case PlaylistOfflineStatus.No:
-                    return "online";
+                    return "OnLine";
                 case PlaylistOfflineStatus.Waiting:
-                    return "queued";
+                    return "Queued";
                 case PlaylistOfflineStatus.Yes:
-                    return "offline";
+                    return "OffLine";
                 default:
                     throw new Exception("Unrecognized playlist state");
             }
@@ -765,9 +803,10 @@ namespace Spotify
         /// Waits in certain intervals until the method returns true.
         /// </summary>
         /// <param name="method">Method to periodically check</param>
-        private void SleepUntilTrue(SleepUntilTrueDelegate method)
+        /// <param name="timeOut">Time-out in ms; default = 10,000 ms ( 10 s)</param>
+        private void SleepUntilTrue(SleepUntilTrueDelegate method, int timeOut = THREAD_SLEEP_INTERVAL * RETRY_COUNT)
         {
-            for (int i = 0; i < RETRY_COUNT; i++)
+            for (int i = 0; i < timeOut/THREAD_SLEEP_INTERVAL; i++)
             {
                 if (!method())
                     Thread.Sleep(THREAD_SLEEP_INTERVAL);
@@ -776,7 +815,7 @@ namespace Spotify
             }
 
             if (!method())
-                throw new Exception("Operation timed out, please try again");
+                throw new Exception(pluginLang.ReadField("/AppLang/Spotify/OperationTimedOut"));
         }
     }
 }

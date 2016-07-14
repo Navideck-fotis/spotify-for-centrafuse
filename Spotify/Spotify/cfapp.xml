@@ -4,12 +4,12 @@
     <APPNAME>Spotify</APPNAME>
     <APPLOCATION>[CFAPPDIR]\Plugins\Spotify</APPLOCATION>
     <APPTYPE>PLUGIN</APPTYPE>
-    <VERSION>1.4</VERSION>
-    <REQUIRESRESTART>True</REQUIRESRESTART>
+    <VERSION>1.6.6</VERSION>
+    <REQUIRESRESTART>Fase</REQUIRESRESTART>
   </APPDATA>
   <APPFILES>
     <FILENAME register="false" overwrite="true" source="libspotify.dll" destination="[CFAPPDIR]\Plugins\Spotify\libspotify.dll" />
-    <FILENAME register="false" overwrite="true" source="SpotiFire.SpotifyLib.dll" destination="[CFAPPDIR]\Plugins\Spotify\SpotiFire.SpotifyLib.dll" />
+    <FILENAME register="false" overwrite="true" source="SpotiFire.SpotifyLib.dll" destination="[CFAPPDIR]\Plugins\Spotify\SpotiFire.SpotifyLib.dll" load="true"/>
     <FILENAME register="false" overwrite="true" source="Spotify.dll" destination="[CFAPPDIR]\Plugins\Spotify\Spotify.dll" />
 
     <FILENAME register="false" overwrite="true" source="Skins\Clean\addAll.png" destination="[CFAPPDIR]\Plugins\Spotify\Skins\Clean\addAll.png" />
@@ -40,6 +40,9 @@
 
     <FILENAME register="false" overwrite="true" source="Skins\Clean\Skin.xml" destination="[CFAPPDIR]\Plugins\Spotify\Skins\Clean\Skin.xml" />
 
+    <FILENAME register="false" overwrite="true" source="Skins\Clean\listview\available_false.png" destination="[CFAPPDIR]\Plugins\Spotify\Skins\Clean\listview\available_false.png" />
+    <FILENAME register="false" overwrite="true" source="Skins\Clean\listview\available_playing.png" destination="[CFAPPDIR]\Plugins\Spotify\Skins\Clean\listview\available_playing.png" />
+    <FILENAME register="false" overwrite="true" source="Skins\Clean\listview\available_true.png" destination="[CFAPPDIR]\Plugins\Spotify\Skins\Clean\listview\available_true.png" />
     <FILENAME register="false" overwrite="true" source="Skins\Clean\listview\downloading.png" destination="[CFAPPDIR]\Plugins\Spotify\Skins\Clean\listview\downloading.png" />
     <FILENAME register="false" overwrite="true" source="Skins\Clean\listview\offline.png" destination="[CFAPPDIR]\Plugins\Spotify\Skins\Clean\listview\offline.png" />
     <FILENAME register="false" overwrite="true" source="Skins\Clean\listview\online.png" destination="[CFAPPDIR]\Plugins\Spotify\Skins\Clean\listview\online.png" />
@@ -47,6 +50,8 @@
     <FILENAME register="false" overwrite="true" source="Skins\Clean\listview\starred_false.png" destination="[CFAPPDIR]\Plugins\Spotify\Skins\Clean\listview\starred_false.png" />
     <FILENAME register="false" overwrite="true" source="Skins\Clean\listview\starred_true.png" destination="[CFAPPDIR]\Plugins\Spotify\Skins\Clean\listview\starred_true.png" />
 
+    <FILENAME register="false" overwrite="true" source="Languages\Dutch.xml" destination="[CFAPPDIR]\Plugins\Spotify\Languages\Dutch.xml" />
     <FILENAME register="false" overwrite="true" source="Languages\English.xml" destination="[CFAPPDIR]\Plugins\Spotify\Languages\English.xml" />
+    <FILENAME register="false" overwrite="true" source="Languages\German.xml" destination="[CFAPPDIR]\Plugins\Spotify\Languages\German.xml" />
   </APPFILES>
 </CFAPP>

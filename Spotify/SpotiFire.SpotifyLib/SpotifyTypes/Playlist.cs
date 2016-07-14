@@ -271,6 +271,7 @@ namespace SpotiFire.SpotifyLib
             internal IntPtr subscribers_changed; // TODO: Implement
         }
         #endregion
+
         private delegate void tracks_added_cb(IntPtr playlistPtr, IntPtr tracksPtr, int num_tracks, int position, IntPtr userdataPtr);
         private delegate void tracks_removed_cb(IntPtr playlistPtr, IntPtr trackIndicesPtr, int num_tracks, IntPtr userdataPtr);
         private delegate void tracks_moved_cd(IntPtr playlistPtr, IntPtr trackIndicesPtr, int num_tracks, int new_position, IntPtr userdataPtr);
@@ -282,6 +283,8 @@ namespace SpotiFire.SpotifyLib
         private delegate void track_seen_changed_cb(IntPtr playlistPtr, int position, bool seen, IntPtr userdataPtr);
         private delegate void description_changed_cb(IntPtr playlistPtr, IntPtr descPtr, IntPtr userdataPtr);
         private delegate void image_changed_cb(IntPtr playlistPtr, IntPtr imgIdPtr, IntPtr userdataPtr);
+        private delegate void track_message_changed_cb(IntPtr playlistPtr, int position, IntPtr message, IntPtr userdataPtr);
+        private delegate void subscribers_changed_cb(IntPtr playlistPtr, IntPtr userdataPtr);
         #endregion
 
         #region Spotify Callbacks
@@ -296,6 +299,8 @@ namespace SpotiFire.SpotifyLib
         private track_seen_changed_cb track_seen_changed;
         private description_changed_cb description_changed;
         private image_changed_cb image_changed;
+        private track_message_changed_cb track_message_changed;
+        private subscribers_changed_cb subscribers_changed;
         #endregion
 
         #region Spotify Callback Implementations
@@ -407,6 +412,24 @@ namespace SpotiFire.SpotifyLib
                 session.EnqueueEventWorkItem(new EventWorkItem(CreateDelegate<ImageEventArgs>(p => p.OnImageChanged, this), new ImageEventArgs(imgId)));
             }
         }
+
+        private void TrackMessageChangedCallback(IntPtr playlistPtr, int position, IntPtr messagePtr, IntPtr userdataPtr)
+        {
+            if (playlistPtr == this.playlistPtr)
+            {
+                ITrack track = Track.Get(session, libspotify.sp_playlist_track(playlistPtr, position));
+                string message = libspotify.GetString(messagePtr, String.Empty);
+                session.EnqueueEventWorkItem(new EventWorkItem(CreateDelegate<TrackMessageEventArgs>(p => p.OnTrackMessageChanged, this), new TrackMessageEventArgs(track, position, message)));
+            }
+        }
+
+        private void SubscribersChangedCallback(IntPtr playlistPtr, IntPtr userdataPtr)
+        {
+            if (playlistPtr == this.playlistPtr)
+            {
+                session.EnqueueEventWorkItem(new EventWorkItem(CreateDelegate<EventArgs>(p => p.OnSubscribersChanged, this), new EventArgs()));
+            }
+        }
         #endregion
 
         #region Event Functions
@@ -463,10 +486,23 @@ namespace SpotiFire.SpotifyLib
             if (DescriptionChanged != null)
                 DescriptionChanged(this, args);
         }
+
         protected virtual void OnImageChanged(ImageEventArgs args)
         {
             if (ImageChanged != null)
                 ImageChanged(this, args);
+        }
+
+        protected virtual void OnTrackMessageChanged(TrackMessageEventArgs args)
+        {
+            if (TrackMessageChanged != null)
+                TrackMessageChanged(this, args);
+        }
+
+        protected virtual void OnSubscribersChanged(EventArgs args)
+        {
+            if (SubscribersChanged != null)
+                SubscribersChanged(this, args);
         }
         #endregion
 
@@ -482,6 +518,8 @@ namespace SpotiFire.SpotifyLib
         public event PlaylistEventHandler<TrackSeenEventArgs> TrackSeenChanged;
         public event PlaylistEventHandler<DescriptionEventArgs> DescriptionChanged;
         public event PlaylistEventHandler<ImageEventArgs> ImageChanged;
+        public event PlaylistEventHandler<TrackMessageEventArgs> TrackMessageChanged;
+        public event PlaylistEventHandler SubscribersChanged;
         #endregion
 
         #region Declarations
@@ -519,6 +557,9 @@ namespace SpotiFire.SpotifyLib
                 track_seen_changed = new track_seen_changed_cb(TrackSeenChangedCallback);
                 description_changed = new description_changed_cb(DescriptionChangedCallback);
                 image_changed = new image_changed_cb(ImageChangedCallback);
+                track_message_changed = new track_message_changed_cb(TrackMessageChangedCallback);
+                subscribers_changed = new subscribers_changed_cb(SubscribersChangedCallback);
+
                 sp_playlist_callbacks callbacks = new sp_playlist_callbacks
                 {
                     tracks_added = Marshal.GetFunctionPointerForDelegate(tracks_added),
@@ -531,7 +572,10 @@ namespace SpotiFire.SpotifyLib
                     track_created_changed = Marshal.GetFunctionPointerForDelegate(track_created_changed),
                     track_seen_changed = Marshal.GetFunctionPointerForDelegate(track_seen_changed),
                     description_changed = Marshal.GetFunctionPointerForDelegate(description_changed),
-                    image_changed = Marshal.GetFunctionPointerForDelegate(image_changed)
+                    image_changed = Marshal.GetFunctionPointerForDelegate(image_changed),
+                    track_message_changed = Marshal.GetFunctionPointerForDelegate(track_message_changed),
+                    subscribers_changed = Marshal.GetFunctionPointerForDelegate(subscribers_changed),
+
                 };
 
                 callbacksPtr = Marshal.AllocHGlobal(Marshal.SizeOf(callbacks));

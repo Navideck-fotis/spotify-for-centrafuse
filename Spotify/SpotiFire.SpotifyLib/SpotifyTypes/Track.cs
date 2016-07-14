@@ -57,6 +57,12 @@ namespace SpotiFire.SpotifyLib
                 get { IsAlive(true); return track.IsAvailable; }
             }
 
+            //LK, 11-jun-2016: Added off line availability
+            public bool IsOfflineAvailable
+            {
+                get { IsAlive(true); return track.IsOfflineAvailable; }
+            }
+
             public bool IsLoaded
             {
                 get { IsAlive(true); return track.IsLoaded; }
@@ -93,12 +99,13 @@ namespace SpotiFire.SpotifyLib
                 return Track.Get(session as Session, this.track.trackPtr);
             }
 
-
             public bool IsPlaceholder
             {
                 get { IsAlive(true); return track.IsPlaceholder; }
             }
+
         }
+
         internal static IntPtr GetPointer(ITrack track)
         {
             if (track is TrackWrapper)
@@ -106,6 +113,7 @@ namespace SpotiFire.SpotifyLib
             throw new ArgumentException("Invalid track");
         }
         #endregion
+        
         #region Counter
         private static Dictionary<IntPtr, Track> tracks = new Dictionary<IntPtr, Track>();
         private static readonly object tracksLock = new object();
@@ -196,7 +204,19 @@ namespace SpotiFire.SpotifyLib
             {
                 IsAlive(true);
                 lock (libspotify.Mutex)
-                    return (libspotify.sp_track_get_availability(session.sessionPtr, trackPtr) & TrackAvailablity.Available) > 0;
+                    return (libspotify.sp_track_get_availability(session.sessionPtr, trackPtr) == TrackAvailability.Available &&   //LK, 11-jun-2016: TrackAvailability is an nummeric enum, not a bitmap
+                        (session.ConnectionState == sp_connectionstate.LOGGED_IN || this.IsOfflineAvailable));  //LK, 11-jun-2016: Track isn't available when not logged in and track is not offline available
+            }
+        }
+
+        //LK, 11-jun-2016: Added off line availability
+        public bool IsOfflineAvailable
+        {
+            get
+            {
+                IsAlive(true);
+                lock (libspotify.Mutex)
+                    return (libspotify.sp_track_offline_get_status(trackPtr) == TrackOfflineStatus.Done);
             }
         }
 

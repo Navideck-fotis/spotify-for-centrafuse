@@ -17,7 +17,7 @@ namespace Spotify
         {
             try
             {
-                if (NowPlayingTable != null)
+                if (NowPlayingTable != null & nowPlayingTableLoaded)    //LK, 22-may-2016: Only save when NowPlayingTable is loaded OK
                 {
                     var links = NowPlayingTable.Rows.Cast<DataRow>()
                         .Select(row => row["TrackObject"] as ITrack)
@@ -56,12 +56,32 @@ namespace Spotify
             }
         }
 
-        private void RestoreNowPlaying()
+        private void UpdateNowPlaying()
         {
+            var tracks = new List<ITrack>();
+
+            foreach (DataRow row in NowPlayingTable.Rows)
+            {
+                ITrack track = (ITrack)row["TrackObject"];
+                row["Available"] = GetAvailableStatusString(track.IsAvailable, track.Equals(currentTrack));
+                if (track.IsAvailable)
+                    tracks.Add(track);
+            }
+
+            //var tracks = this.NowPlayingTable.Rows.Cast<DataRow>().Select(row => (row["TrackObject"] as ITrack)).Where(t => t.IsAvailable); //TODO: selecteert toch alle tracks
+
+            NonShuffledTracks = new LinkedList<ITrack>(tracks);   //LK, 11-jun-2016: Only add available tracks
+            ShuffledTracks = new LinkedList<ITrack>(ShuffleSongs(NonShuffledTracks));   //LK, 11-jun-2016: Only add available tracks
+        }
+
+        private void RestoreNowPlaying(bool startPlaying)
+        {
+            nowPlayingTableLoaded = false; //LK, 22-may-2016: Avoid saving empty table
+
             var fullPath = Path.Combine(CF_params.pluginConfigPath, NOW_PLAYING_FILE_NAME);
             if (File.Exists(fullPath))
             {
-                CF_systemCommand(centrafuse.Plugins.CF_Actions.SHOWINFO, "Restoring \"Now Playlist\" list");
+                CF_systemCommand(centrafuse.Plugins.CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/RestoringNowPlaylist"));
                 ThreadPool.QueueUserWorkItem(delegate(object obj)
                 {
                     try
@@ -77,20 +97,21 @@ namespace Spotify
 
                         NowPlayingTable = LoadTracksIntoTable(tracks);
 
-                        ShuffledTracks = new LinkedList<ITrack>(ShuffleSongs(tracks));
+                        NonShuffledTracks = new LinkedList<ITrack>(tracks.Where(t => (t.IsAvailable)));   //LK, 11-jun-2016: Only add available tracks
+                        ShuffledTracks = new LinkedList<ITrack>(ShuffleSongs(NonShuffledTracks));   //LK, 11-jun-2016: Only add available tracks
 
                         var trackToPlay = trackIxToPlay != -1 ? tracks[trackIxToPlay] : null;
 
                         foreach (var link in links)
-                        {
                             link.Dispose();
-                        }
+
+                        nowPlayingTableLoaded = true;   //LK, 22-may-2016: NowPlaying table may be saved from now on
 
                         this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
                             {
                                 SwitchToTab(Tabs.NowPlaying, GroupingType.Songs, NowPlayingTable, "Now Playing", null, true);
                                 CF_systemCommand(centrafuse.Plugins.CF_Actions.HIDEINFO);
-                                if (trackToPlay != null && trackToPlay.IsAvailable && !trackToPlay.IsPlaceholder)
+                                if (trackToPlay != null && !trackToPlay.IsPlaceholder)
                                 {
                                     PlayTrack(trackToPlay);
                                     if (pnp.CurrentSongPosition > 5000)
@@ -102,17 +123,18 @@ namespace Spotify
 
                                     //[Grant] Pause after restore if auto play is disabled.
                                     if (!autoPlay)
-                                    {
                                         Pause();
-                                    }
                                 }
+                                else
+                                    currentTrack = null;
                             }));
                     }
                     catch (Exception ex)
                     {
+                        nowPlayingTableLoaded = false;  //LK, 22-may-2016: Avoid saving corrupted table
                         this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
                             {
-                                CF_systemDisplayDialog(centrafuse.Plugins.CF_Dialogs.OkBox, "Failed to restore \"Now Playing\" list: " + ex.Message);
+                                CF_systemDisplayDialog(centrafuse.Plugins.CF_Dialogs.OkBox, pluginLang.ReadField("/AppLang/Spotify/FailedToRestoreNowPlaylist") + ex.Message);
                                 CF_systemCommand(centrafuse.Plugins.CF_Actions.HIDEINFO);
                             }));
                     }
