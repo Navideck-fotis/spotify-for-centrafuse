@@ -890,8 +890,11 @@ namespace Spotify
                 WriteLog("Loading settings");
                 LoadSettings();
                 CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/loggingIn"));
-                WriteLog("Logging in");
-                SpotifySession.Login(username, password, true);
+                if (SpotifySession.ConnectionState != sp_connectionstate.LOGGED_IN)	//LK, 11-jul-2016: Don't try to login when already logged in; just wait for completion
+                {
+                    WriteLog("Logging in");
+                    SpotifySession.Login(username, password, true);
+                }
 
                 //LK, 22-may-2016, Begin: Give the server some time to response
                 int retryCount = 5;

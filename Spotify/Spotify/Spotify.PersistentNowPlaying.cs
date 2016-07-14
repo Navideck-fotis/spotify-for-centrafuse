@@ -46,13 +46,14 @@ namespace Spotify
                         pnp.CurrentSongPosition = timespan.TotalMilliseconds;
                     }
 
+                    WriteLog("NowPlayingList will be saved in file: " + fullPath);
                     pnp.Save(fullPath);
-                    
+                    WriteLog("NowPlayingList successfully saved");
                 }
             }
             catch (Exception ex)
             {
-                CF_writePluginLog("Error serializing now playing list: " + ex.Message);
+                WriteLog("Error serializing now playing list: " + ex.Message);
             }
         }
 
@@ -63,7 +64,21 @@ namespace Spotify
             foreach (DataRow row in NowPlayingTable.Rows)
             {
                 ITrack track = (ITrack)row["TrackObject"];
+                if (track.IsLoaded)		//LK, 11-jul-2016: Don't try to get attributes when track isn't loaded (yet)
+                {
+                    row["Name"] = track.Name;
+                    row["Artist"] = GetArtistsString(track.Artists);
+                    row["Album"] = track.Album.Name;
+                }
+                else
+                {
+                    row["Name"] = "";
+                    row["Artist"] = pluginLang.ReadField("/AppLang/Spotify/TrackNotAvailableOffline");
+                    row["Album"] = "";
+                }
+                row["Starred"] = GetStarredStatusString(track.IsStarred);
                 row["Available"] = GetAvailableStatusString(track.IsAvailable, track.Equals(currentTrack));
+                row["TrackObject"] = track;
                 if (track.IsAvailable)
                     tracks.Add(track);
             }

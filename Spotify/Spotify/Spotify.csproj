@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Spotify</RootNamespace>
     <AssemblyName>Spotify</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -73,8 +73,8 @@
       <HintPath>..\..\..\..\..\..\Repository\Centrafuse\ThirdParty\Bass\Bass.NET\2.4.11.1\v4.0\Bass.Net.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="cfplugin">
-      <HintPath>..\..\..\..\..\..\Repository\Centrafuse\Centrafuse\App\CFPlugin\bin\Release\cfplugin.dll</HintPath>
+    <Reference Include="cfplugin_V4.4.9.116">
+      <HintPath>..\..\..\..\..\..\Repository\Centrafuse\Centrafuse SDK\Centrafuse4SDK\CFPlugin\Win32\cfplugin_V4.4.9.116.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -181,7 +181,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SpotiFire.SpotifyLib\SpotiFire.SpotifyLib.csproj">
-      <Project>{CBF5614B-AF79-4228-8265-7DC2BAF9A626}</Project>
+      <Project>{cbf5614b-af79-4228-8265-7dc2baf9a626}</Project>
       <Name>SpotiFire.SpotifyLib</Name>
     </ProjectReference>
   </ItemGroup>

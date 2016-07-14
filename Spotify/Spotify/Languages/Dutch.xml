@@ -1,0 +1,59 @@
+﻿<APPLANG>
+  <SPOTIFY>
+    <DISPLAYNAME>Spotify</DISPLAYNAME>
+    <DESCRIPTION>Spotify client voor Centrafuse</DESCRIPTION>
+    <RESTORINGNOWPLAYLIST>Laden "Now Playing" afspeellijst</RESTORINGNOWPLAYLIST>
+    <FAILEDTORESTORENOWPLAYLIST>"Het laden van de "Now Playing" lijst is mislukt: "</FAILEDTORESTORENOWPLAYLIST>
+    <PLEASEWAIT>Wachten A.U.B. ...</PLEASEWAIT>
+    <CONNECTING>Verbinden met Spotify</CONNECTING>
+    <LOGGINGIN>Bezig met inloggen</LOGGINGIN>
+    <SEARCHFOR>Zoeken naar:</SEARCHFOR>
+    <USENAMENOTSPECIFIED>Gebruikersnaam is niet opgegeven</USENAMENOTSPECIFIED>
+    <SONGS>Titels</SONGS>
+    <ALBUMS>Albums</ALBUMS>
+    <ARTISTS>Artiesten</ARTISTS>
+    <PLAYLISTS>Afspeellijsten</PLAYLISTS>
+    <STARREDSONGS>Jouw favoriete titels</STARREDSONGS>
+    <RETRIEVETOPLISTOF>Ontvang de meest populaire van:</RETRIEVETOPLISTOF>
+    <RETRIEVEINBOXOF>Ontvang Postvak-in van:</RETRIEVEINBOXOF>
+    <CANTADDMULTIPLEALBUMS>Kan geen meerdere albums in één keer toevoegen</CANTADDMULTIPLEALBUMS>
+    <CANTADDMULTIPLEARTISTS>Kan geen meerdere artiesten in één keer toevoegen</CANTADDMULTIPLEARTISTS>
+    <CANTADDMULTIPLEPLAYLISTS>Kan geen meerdere afspeellijsten in één keer toevoegen</CANTADDMULTIPLEPLAYLISTS>
+    <CONFIRMCLEARPLAYLIST>Weet je zeker dat je de afspeellijst wilt wissen?</CONFIRMCLEARPLAYLIST>
+    <CONFIRMOFFLINEPLAYLIST>Wil je de afpeellijst lokaal beschikbaar maken?</CONFIRMOFFLINEPLAYLIST>
+    <CONFIRMUNAVAILOFFLINEPLAYLIST>Deze afspeellijst zal niet langer lokaal beschikbaar zijn; Doorgaan?</CONFIRMUNAVAILOFFLINEPLAYLIST>
+    <CONFIRMADDMULTIPLETRACKS>Je staat op het punt om  {0} tracks toe te voegen;{1} Weet je het zeker?</CONFIRMADDMULTIPLETRACKS>
+    <NOOFFLINETRACKSAVAILABLE>Geen van de tracks is lokaal beschikbaar</NOOFFLINETRACKSAVAILABLE>
+    <TRACKNOTAVAILABLEOFFLINE>Huidige track is niet (meer) lokaal beschikbaar</TRACKNOTAVAILABLEOFFLINE>
+    <OPERATIONTIMEDOUT>Handeling duurde te lang; probeer het nogmaals a.u.b.</OPERATIONTIMEDOUT>
+    <PLAYTOKENLOST>Uw account wordt ergens anders gebruikt; afspelen gepauzeerd</PLAYTOKENLOST>
+    <NOTLOGGEDIN>Je bent niet ingelogged</NOTLOGGEDIN>
+    <NEEDTOBEONLINE>U dient met Spotify verbonden te zijn</NEEDTOBEONLINE>
+    <SEARCHING>Zoeken...</SEARCHING>
+    <SEARCHBYSONGNAME>Zoek titel op naam</SEARCHBYSONGNAME>
+    <SEARCHBYALBUMNAME>Zoek album op naam</SEARCHBYALBUMNAME>
+    <SEARCHBYARTISTNAME>Zoek artiest op naam</SEARCHBYARTISTNAME>
+    <SEARCHBYPLAYLISTNAME>Zoek aspeellijst op naam</SEARCHBYPLAYLISTNAME>
+    <RETRIEVINGINBOX>Ontvangen in je postvak-in</RETRIEVINGINBOX>
+    <RETRIEVINGSTARREDSONGS>Ontvangen van je favoriete tracks</RETRIEVINGSTARREDSONGS>
+    <RETRIEVINGPLAYLISTS>Ontvangen van je afspeellijsten</RETRIEVINGPLAYLISTS>
+    <RETRIEVINGTOPLIST>Ontvangen van de hoogste in de lijst</RETRIEVINGTOPLIST>
+    <DOWNLOADING>downloading</DOWNLOADING>
+    <ONLINE>on-line</ONLINE>
+    <QUEUED>wachtrij</QUEUED>
+    <OFFLINE>off-line</OFFLINE>
+    <CANCEL>Afbreken</CANCEL>
+  </SPOTIFY>
+  <SETUP>
+    <TITLE>Spotify</TITLE>
+    <USERNAME>Gebruikersnaam</USERNAME>
+    <PASSWORD>Paswoord</PASSWORD>
+    <BITRATE>Voorkeur Bitrate</BITRATE>
+    <AUTOPLAY>Afspelen automatisch starten</AUTOPLAY>
+    <AUTOLOOP>Automatisch herhalen lijst</AUTOLOOP>
+    <LOCATION>Spotify data maplocatie</LOCATION>
+    <SELECTDATAFOLDER>Selecteer een map voor Spotify data</SELECTDATAFOLDER>
+    <POWERRESUMEDELAY>Vertraging na ontwaken uit slaaptoestand</POWERRESUMEDELAY>
+    <LOGEVENTS>Gebeurtenissen vastleggen</LOGEVENTS>
+  </SETUP>
+</APPLANG>

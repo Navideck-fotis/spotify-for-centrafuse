@@ -677,11 +677,20 @@ namespace Spotify
             foreach (var track in tracks.Where(t => /* t.IsAvailable && */ !t.IsPlaceholder))   //LK, 11-jun-2016: Added offline/available flag
             {
                 var newRow = table.NewRow();
-                newRow["Name"] = track.Name;
-                newRow["Artist"] = GetArtistsString(track.Artists);
-                newRow["Album"] = track.Album.Name;
+                if (track.IsLoaded)	//LK, 11-jul-01: When a track isn't loaded while off-line, don't try to get track attributes
+                {
+                    newRow["Name"] = track.Name;
+                    newRow["Artist"] = GetArtistsString(track.Artists);
+                    newRow["Album"] = track.Album.Name;
+                }
+                else
+                {
+                    newRow["Name"] =  "";
+                    newRow["Artist"] = pluginLang.ReadField("/AppLang/Spotify/TrackNotAvailableOffline");
+                    newRow["Album"] = "";
+                }
                 newRow["Starred"] = GetStarredStatusString(track.IsStarred);
-                newRow["Available"] = GetAvailableStatusString( track.IsAvailable, false);    //LK, 11-jun-2016: Added offline/available flag
+                newRow["Available"] = GetAvailableStatusString(track.IsAvailable, false);    //LK, 11-jun-2016: Added offline/available flag
                 newRow["TrackObject"] = track;
                 table.Rows.Add(newRow);
             }
