@@ -27,7 +27,7 @@ namespace Spotify
 
             // When CF_initSetup() is called, the CFPlugin layer will call back into CF_setupReadSettings() to read the page
             // Note that this.pluginConfig and this.pluginLang must be set before making this call
-            CF_initSetup(1, 1);
+            CF_initSetup(2, 2);
 
             // Update the Settings page title
             this.CF_updateText("TITLE", this.pluginLang.ReadField("/APPLANG/SETUP/TITLE"));
@@ -37,27 +37,48 @@ namespace Spotify
         {
             try
             {
-                ButtonHandler[CFSetupButton.One] = new CFSetupHandler(SetUserName);
-                ButtonText[CFSetupButton.One] = this.pluginLang.ReadField("/APPLANG/SETUP/USERNAME");
-                ButtonValue[CFSetupButton.One] = this.pluginConfig.ReadField("/APPCONFIG/USERNAME");
+                if (currentpage == 1)
+                {
+                    ButtonHandler[CFSetupButton.One] = new CFSetupHandler(SetUserName);
+                    ButtonText[CFSetupButton.One] = this.pluginLang.ReadField("/APPLANG/SETUP/USERNAME");
+                    ButtonValue[CFSetupButton.One] = this.pluginConfig.ReadField("/APPCONFIG/USERNAME");
 
-                ButtonHandler[CFSetupButton.Two] = new CFSetupHandler(SetPassword);
-                ButtonText[CFSetupButton.Two] = this.pluginLang.ReadField("/APPLANG/SETUP/PASSWORD");
-                string encryptedPassword = this.pluginConfig.ReadField("/APPCONFIG/PASSWORD");
-                ButtonValue[CFSetupButton.Two] = String.IsNullOrEmpty(encryptedPassword) ? String.Empty : new String('•', 8);
+                    ButtonHandler[CFSetupButton.Two] = new CFSetupHandler(SetPassword);
+                    ButtonText[CFSetupButton.Two] = this.pluginLang.ReadField("/APPLANG/SETUP/PASSWORD");
+                    string encryptedPassword = this.pluginConfig.ReadField("/APPCONFIG/PASSWORD");
+                    ButtonValue[CFSetupButton.Two] = String.IsNullOrEmpty(encryptedPassword) ? String.Empty : new String('•', 8);
 
-                ButtonHandler[CFSetupButton.Three] = new CFSetupHandler(SetLocation);
-                ButtonText[CFSetupButton.Three] = this.pluginLang.ReadField("/APPLANG/SETUP/LOCATION");
-                ButtonValue[CFSetupButton.Three] = GetLocation(); 
+                    ButtonHandler[CFSetupButton.Three] = new CFSetupHandler(SetLocation);
+                    ButtonText[CFSetupButton.Three] = this.pluginLang.ReadField("/APPLANG/SETUP/LOCATION");
+                    ButtonValue[CFSetupButton.Three] = GetLocation();
 
-                ButtonHandler[CFSetupButton.Four] = new CFSetupHandler(SetBitrate);
-                ButtonText[CFSetupButton.Four] = this.pluginLang.ReadField("/APPLANG/SETUP/BITRATE");
-                ButtonValue[CFSetupButton.Four] = GetBitrateString();
+                    ButtonHandler[CFSetupButton.Four] = new CFSetupHandler(SetBitrate);
+                    ButtonText[CFSetupButton.Four] = this.pluginLang.ReadField("/APPLANG/SETUP/BITRATE");
+                    ButtonValue[CFSetupButton.Four] = GetBitrateString();
 
-                //[GrantA] Auto play music boolean button.
-                ButtonHandler[CFSetupButton.Five] = new CFSetupHandler(SetAutoPlay);
-                ButtonText[CFSetupButton.Five] = this.pluginLang.ReadField("/APPLANG/SETUP/AUTOPLAY");
-                ButtonValue[CFSetupButton.Five] = GetAutoPlayString();               
+                    //LK, 22-may-2016: Event logging
+                    ButtonHandler[CFSetupButton.Five] = new CFSetupHandler(SetLogEvents);
+                    ButtonText[CFSetupButton.Five] = this.pluginLang.ReadField("/APPLANG/SETUP/LOGEVENTS");
+                    ButtonValue[CFSetupButton.Five] = GetLogEventsString();
+
+                    //[GrantA] Auto play music boolean button.
+                    ButtonHandler[CFSetupButton.Six] = new CFSetupHandler(SetAutoPlay);
+                    ButtonText[CFSetupButton.Six] = this.pluginLang.ReadField("/APPLANG/SETUP/AUTOPLAY");
+                    ButtonValue[CFSetupButton.Six] = GetAutoPlayString();
+
+                    //LK, 22-may-2016: Auto loop on end of playlists
+                    ButtonHandler[CFSetupButton.Seven] = new CFSetupHandler(SetAutoLoop);
+                    ButtonText[CFSetupButton.Seven] = this.pluginLang.ReadField("/APPLANG/SETUP/AUTOLOOP");
+                    ButtonValue[CFSetupButton.Seven] = GetAutoLoopString();
+                }
+                else if (currentpage == 2)
+                {
+                    //LK, 22-may-2016: Auto loop on end of playlists
+                    ButtonHandler[CFSetupButton.One] = new CFSetupHandler(SetPowerResumeDelay);
+                    ButtonText[CFSetupButton.One] = this.pluginLang.ReadField("/APPLANG/SETUP/POWERRESUMEDELAY");
+                    ButtonValue[CFSetupButton.One] = this.pluginConfig.ReadField("/APPCONFIG/POWERRESUMEDELAY");
+
+                }
             }
             catch (Exception errmsg) { CFTools.writeError(errmsg.Message, errmsg.StackTrace); }
         }
@@ -68,6 +89,14 @@ namespace Spotify
             if (string.IsNullOrEmpty(location))
                 location = Utility.GetDefaultLocationPath();
             return location;
+        }
+
+        private string GetPowerResumeDelay()
+        {
+            string powerResumeDelayString = this.pluginConfig.ReadField("/APPCONFIG/POWERRESUMEDELAY");
+            if (string.IsNullOrEmpty(powerResumeDelayString))
+                powerResumeDelayString = Utility.GetDefaultLocationPath();
+            return powerResumeDelayString;
         }
 
         private void SetUserName(ref object value)
@@ -122,7 +151,7 @@ namespace Spotify
         {
             string location = GetLocation();
 
-            CFDialogParams dialogParams = new CFDialogParams("Choose a folder for Spotify data", location);
+            CFDialogParams dialogParams = new CFDialogParams(this.pluginLang.ReadField("/APPLANG/SETUP/SELECTDATAFOLDER"), location);
             dialogParams.browseable = true;
             dialogParams.enablesubactions = true;
             dialogParams.showfiles = false;
@@ -134,7 +163,27 @@ namespace Spotify
                 this.pluginConfig.WriteField("/APPCONFIG/LOCATION", newPath);
                 ButtonValue[(int)value] = newPath;
             }
-                
+
+        }
+
+        //LK, 22-may-2016: Add PowerResumeDelay parameter
+        private void SetPowerResumeDelay(ref object value)
+        {
+            string powerResumeDelay = GetPowerResumeDelay();
+
+            CFDialogParams dialogParams = new CFDialogParams(this.pluginConfig.ReadField("/APPCONFIG/POWERRESUMEDELAY"), powerResumeDelay);
+            dialogParams.browseable = true;
+            dialogParams.enablesubactions = true;
+            dialogParams.showfiles = false;
+
+            CFDialogResults results = new CFDialogResults();
+            if (this.CF_displayDialog(CF_Dialogs.NumberPad, dialogParams, results) == DialogResult.OK)
+            {
+                string newPowerResumeDelay = results.resultvalue;
+                this.pluginConfig.WriteField("/APPCONFIG/POWERRESUMEDELAY", newPowerResumeDelay);
+                ButtonValue[(int)value] = newPowerResumeDelay;
+            }
+
         }
 
         private string GetBitrateString()
@@ -211,5 +260,59 @@ namespace Spotify
         {
             this.pluginConfig.WriteField("/APPCONFIG/AUTOPLAY", value.ToString());
         }
+
+        /// <summary>
+        /// LK, 22-may-2016: Returns auto loop on end of playlist on show boolean string of "True" or "False", or if not set then "False". 
+        /// </summary>
+        /// <returns>Boolean</returns>
+        private string GetAutoLoopString()
+        {
+            string autoLoopString = this.pluginConfig.ReadField("/APPCONFIG/AUTOLOOP");
+
+            if (string.IsNullOrEmpty(autoLoopString))
+            {
+                return "False";
+            }
+            else
+            {
+                return autoLoopString;
+            }
+        }
+
+        /// <summary>
+        /// LK, 22-may-2016: Writes auto loop on end of playlist on show boolean setting.
+        /// </summary>
+        /// <param name="value">"True" or "False"</param>
+        private void SetAutoLoop(ref object value)
+        {
+            this.pluginConfig.WriteField("/APPCONFIG/AUTOLOOP", value.ToString());
+        }
+
+        /// <summary>
+        /// LK, 22-may-2016: Enables event logging.
+        /// </summary>
+        /// <param name="value">"True" or "False"</param>
+        private void SetLogEvents(ref object value)
+        {
+            this.pluginConfig.WriteField("/APPCONFIG/LOGEVENTS", value.ToString());
+        }
+        /// <summary>
+        /// LK, 22-may-2016: Returns auto loop on end of playlist on show boolean string of "True" or "False", or if not set then "False". 
+        /// </summary>
+        /// <returns>Boolean</returns>
+        private string GetLogEventsString()
+        {
+            string logEventsString = this.pluginConfig.ReadField("/APPCONFIG/LOGEVENTS");
+
+            if (string.IsNullOrEmpty(logEventsString))
+            {
+                return "False";
+            }
+            else
+            {
+                return logEventsString;
+            }
+        }
+
     }
 }

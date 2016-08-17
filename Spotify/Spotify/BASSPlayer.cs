@@ -11,12 +11,30 @@ namespace Spotify
         public BASSPlayer()
         {
             Paused = true;
+            Stopped = true; //LK, 22-jul-2016: Initial state is stopped
         }
-        
-        private int channel = -1;
+
+        //LK, 22-may-2016, Begin: Add callback to handle changed channel
+        public event ChannelChangedDelegate ChannelChangedEvent;
+        public delegate void ChannelChangedDelegate (int newChannel);
+
+        private int _channel = -1;
+        private int channel
+        {
+            get { return _channel; }
+            set 
+            {
+                _channel = value;
+
+                    if (ChannelChangedEvent != null)
+                        ChannelChangedEvent (_channel);
+            }
+        }
+        //LK, 22-may-2016, End: Add callback to handle changed channel
+
         public int EnqueueSamples(int channels, int rate, byte[] samples, int frames)
         {
-            if (stopped)
+            if (_stopped)
             {
                 return frames; //should we return 0? this means frames will be actively dropped
             }
@@ -33,21 +51,35 @@ namespace Spotify
             return frames;
         }
 
-        private bool stopped = true;
+        //LK, 22-jul-2016: Make stopped status externally available
+        private bool _stopped = true;
+        public bool Stopped
+        {
+            get
+            {
+                return _stopped;
+            }
+            set
+            {
+                _stopped = value;
+            }
+        }
+
         public void Stop()
         {
             if (channel != -1)
             {
+                //TODO: LK: Add cross-over function
                 Bass.BASS_ChannelStop(channel);
                 Bass.BASS_StreamFree(channel);
                 channel = -1;
-                stopped = true;
+                _stopped = true;
             }
         }
 
         public void ReadyPlay()
         {
-            stopped = false;
+            _stopped = false;
         }
 
         private bool _paused = false;

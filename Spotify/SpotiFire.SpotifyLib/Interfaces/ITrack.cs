@@ -10,7 +10,8 @@ namespace SpotiFire.SpotifyLib
         sp_error Error { get; }
         int Index { get; }
         bool IsAvailable { get; }
-        bool IsLoaded { get; }
+        bool IsOfflineAvailable { get; }
+        //LK, 11-jun-2016: Inherrited from IAsyncLoaded: //bool IsLoaded { get; }
         bool IsStarred { get; set; }
         bool IsPlaceholder { get; }
         string Name { get; }

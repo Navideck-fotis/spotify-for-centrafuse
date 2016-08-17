@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using centrafuse.Plugins;
@@ -15,14 +16,35 @@ namespace Spotify
 {
     public partial class Spotify : CFPlugin
     {
+        #region Constants
+
+        //LK, 22-may-2016: Add standard plugin constants for module log support
+        private const string PluginName = "Spotify";
+        private const string PluginPath = @"\Plugins\" + PluginName + @"\";
+        private const string PluginPathSkins = PluginPath + @"Skins\";
+        private const string PluginPathLanguages = PluginPath + @"Languages\";
+        private const string ConfigurationFileName = "config.xml";
+        private const string LogFileName = "Spotify.log";
+
+        private const string userAgent = "SpotiFire";
+        #endregion Constants
+
+        #region Variables
+        public static string LogFilePath = CFTools.AppDataPath + PluginPath + LogFileName;  //LK, 22-may-2016: add support for event logging in module log
+
+        internal string currentVisImagePath = "";   //LK, 22-may-2016: Added support for full function visuals and album art
+        #endregion
+
         #region settings
 
+        public static bool LogEvents;
         private string username;
         private string password;
         private string tempPath;
         private Boolean autoPlay;
+        private Boolean autoLoop;   //LK, 22-may-2016: add support for auto loop (playlist)
         private sp_bitrate preferredBitrate;
-        private const string userAgent = "SpotiFire";
+        private int powerResumeDelay = 5000;
         #endregion
 
         #region key
@@ -74,6 +96,11 @@ namespace Spotify
 
         private const string PLUGIN_NAME = "Spotify";
 
+        private bool pluginNonBufferedVisSupport = false;   //LK, 22-may-2016
+        private bool nowPlayingTableLoaded = false;   //LK, 22-may-2016
+
+        private CFControls.CFVis miniPicVis;
+
         private Stack<TableState> TableStates = new Stack<TableState>();
 
         private BindingSource MainTableBindingSource;
@@ -92,31 +119,196 @@ namespace Spotify
         {
             this.CF3_initPlugin(PLUGIN_NAME, true);
 
+            try { LogEvents = Boolean.Parse(pluginConfig.ReadField("/APPCONFIG/LOGEVENTS")); }
+            catch { LogEvents = false; };
+
+            WriteLog("startup");
+            WriteLog("startup, Time of day: " + DateTime.Now + ", Version: " + CF_params.pluginVersion);
+            WriteLog("Start");
+
+
             this.CF_localskinsetup();
 
-            this.CF_params.Media.isAudioPlugin = true;
+            LoadSettings(); //LK, 22-may-2016: Moved from initSpotifyClient()
 
+            this.CF_params.Media.isAudioPlugin = true;
+            this.CF_params.Media.useCorePlaybackControl = true;
+            this.CF_params.Media.mediaPlaying = false;
+
+            //LK,22-may-2016: Added support for new mixer function (mute single mixer input channel for render (output) devices is available from cfMixer V3.7.1)
+            //      and check for Centrafuse V4.4.9-; the next release will support Vis for non-buffered audio apps (like this one)
+            try
+            {
+                string cfMixerVersion = CFTools.GetVersion("cfMixer.dll");
+                string[] cfMixerVersionSplit = cfMixerVersion.Split('.');
+                int majorVersion = int.Parse(cfMixerVersionSplit[0]);
+                int minorVersion = int.Parse(cfMixerVersionSplit[1]);
+                int updateVersion = int.Parse(cfMixerVersionSplit[2]);
+                if (majorVersion > 3 || (majorVersion == 3 && minorVersion > 7) || (majorVersion == 3 && minorVersion == 7 && updateVersion >= 1))
+                    if (Environment.OSVersion.Version.Major >= 6)
+                        CF_params.Media.playbackLine = "Centrafuse";
+
+                string cfVersion = CFTools.GetVersion("Centrafuse.exe");
+                string[] cfVersionSplit = cfVersion.Split('.');
+                majorVersion = int.Parse(cfVersionSplit[0]);
+                minorVersion = int.Parse(cfVersionSplit[1]);
+                updateVersion = int.Parse(cfVersionSplit[2]);
+                if (majorVersion > 4 || (majorVersion == 4 && minorVersion > 4) || (majorVersion == 4 && minorVersion == 4 && updateVersion > 9))
+                    pluginNonBufferedVisSupport = true;
+            }
+            catch { CF_params.Media.playbackLine = string.Empty; }
+
+            CF_events.powerModeChanged += new Microsoft.Win32.PowerModeChangedEventHandler(Spotify_CF_Event_powerModeChanged);
             this.CF_events.trackPositionChanged += new CFTrackPositionChangedEventHandler(CF_events_trackPositionChanged);
+            this.CF_events.connectionEstablished += new EventHandler(CF_events_connectionChanged);
+            this.CF_events.connectionLost += new EventHandler(CF_events_connectionChanged);
+
+            this.player.ChannelChangedEvent += new BASSPlayer.ChannelChangedDelegate(channelChangedHandler);
+
+            WriteLog("Stop");
+        }
+
+        void channelChangedHandler(int newChannel)
+        {
+            try
+            {
+                this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
+                {
+                    try
+                    {
+                        if (newChannel == -1)
+                            CF_bassSetVis(newChannel, true, -1);  //LK, 22-may-2016: Add support for visualizations
+                        else
+                            CF_bassSetVis(newChannel, false, -1);  //LK, 22-may-2016: Add support for visualizations
+                    }
+                    catch (Exception ex) { CF_displayMessage(ex.Message); }
+                }));
+            }
+            catch (Exception ex) { CF_displayMessage(ex.Message); }
         }
 
         void CF_events_trackPositionChanged(object sender, TrackPositionChangedArgs e)
         {
-            if (currentTrack != null)
+            try
             {
-                var percentage = e.Percentage();
-                
-                if (percentage < 0)
-                    return;
+                if (currentTrack != null)
+                {
+                    var percentage = e.Percentage();
 
-                double fraction = (double)percentage / 100;
-                var offset = (int)(currentTrack.Duration.TotalMilliseconds * fraction);
-                SeekCurrentTrack(offset);
+                    if (percentage < 0)
+                        return;
+
+                    double fraction = (double)percentage / 100;
+                    var offset = (int)(currentTrack.Duration.TotalMilliseconds * fraction);
+                    SeekCurrentTrack(offset);
+                }
+            }
+            catch (Exception ex) { CF_displayMessage(ex.Message); }
+        }
+
+        void CF_events_connectionChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                if (SpotifySession != null)
+                {
+                    if (CF_getConnectionStatus())
+                    {
+                        //Internet connection reastablished
+                        SpotifySession.SetConnectionType(ConnectionType.Wired);
+                        WriteLog("Internet connection become available: Session connection type is set to " + ConnectionType.Wired);
+                    }
+                    else
+                    {
+                        //Internet connection lost
+                        SpotifySession.SetConnectionType(ConnectionType.None);
+                        WriteLog("Internet connection lost: Session connection type is set to " + ConnectionType.None);
+                    }
+
+                    if (CF_params.Media.mediaPlaying)       //LK, 04-aug-2016: Don't do anything when not playing 
+                    {
+                        this.CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/WaitForConnection"));
+
+                        ThreadPool.QueueUserWorkItem(delegate(object obj)
+                        {
+                            try
+                            {
+                                this.ParentForm.BeginInvoke(new MethodInvoker(() =>
+                                {
+                                    try
+                                    {
+                                        if (CF_getConnectionStatus())
+                                        {
+                                            //Internet connection reastablished
+                                            SleepUntilTrue(() => SpotifySession.ConnectionState == sp_connectionstate.LOGGED_IN, 30000);
+                                            UpdateNowPlaying();   //Restore NowPlaying playlist but leave player in the current state
+                                        }
+                                        else
+                                        {
+                                            //Internet connection lost
+                                            SleepUntilTrue(() => SpotifySession.ConnectionState == sp_connectionstate.DISCONNECTED, 60000);
+                                            if (currentTrack != null)
+                                            {
+                                                if (!currentTrack.IsAvailable)
+                                                {
+                                                    string message = pluginLang.ReadField("/AppLang/Spotify/TrackNotAvailableOffline");
+                                                    WriteLog(message);  //LK, 22-jul-2016: Write message to module log file i.s.o. Error.log file
+                                                    CF_displayMessage(message);
+
+                                                    this.CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/WaitForConnection"), "AUTOHIDE");
+                                                    ITrack nextAvailableTrack = findAvailableTrack(currentTrack, autoLoop);
+                                                    StopAllPlayback();
+                                                    nextAvailableTrack = findAvailableTrack(nextAvailableTrack, autoLoop);  //Be sure, the track is still in the list
+                                                    if (nextAvailableTrack != null)    //LK, 22-jul-2016: Only start playing when a valid track is found
+                                                        PlayTrack(nextAvailableTrack);
+                                                    else
+                                                    {
+                                                        //LK, 22-jul-2016: Display a message when no valid off-line tracks are found
+                                                        message = pluginLang.ReadField("/AppLang/Spotify/NoOfflineTracksAvailable");
+                                                        WriteLog(message);
+                                                        CF_displayMessage(message);
+                                                    }
+                                                }
+                                            }
+
+                                            //LK, 22-jul-2016: Always update the now play list (even when the current track isn't available any more)
+                                            UpdateNowPlaying();  //Restore NowPlaying playlist but leave player in the current state
+                                        }
+                                        CF_systemCommand(CF_Actions.HIDEINFO);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        CF_systemCommand(CF_Actions.HIDEINFO);
+                                        WriteLog("Error serializing now playing list: " + ex.Message);  //LK, 22-jul-2016: Don't border user with this:  //  CF_displayMessage(ex.Message);
+                                    }
+                                }));
+                            }
+                            catch (Exception ex)
+                            {
+                                CF_systemCommand(CF_Actions.HIDEINFO);
+                                CF_displayMessage(ex.Message);
+                            }
+                        });
+                    }
+                    else
+                    {
+                        //LK, 04-aug-2016: Always update the now play list (even when we are not playing or even the current audio source)
+                        UpdateNowPlaying();  //Restore NowPlaying playlist but leave player in the current state
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                CF_systemCommand(CF_Actions.HIDEINFO);
+                CF_displayMessage(ex.Message);
             }
         }
 
         public override void CF_localskinsetup()
         {
-            this.CF3_initSection("Main");
+            WriteLog("Start");
+
+            this.CF3_initSection("Spotify");    //lk, 22-may-2016: Don't get confused with Centrafuse MAIN section
             var list = advancedlistArray[CF_getAdvancedListID("mainList")];
             list.DataBinding = MainTableBindingSource;
             list.DoubleClickListTiming = true;
@@ -124,11 +316,17 @@ namespace Spotify
             list.LongClick += new EventHandler<CFControlsExtender.Listview.ItemArgs>(list_LongClick);
             list.LinkedItemClick += new EventHandler<CFControlsExtender.Listview.LinkedItemArgs>(list_LinkedItemClick);
             SwitchToTab(Tabs.NowPlaying, GroupingType.Songs, NowPlayingTable, "Now Playing", null, false);
-            
+
+            //LK, 22-may-2016: Add support for Album Art and Visualizations
+            miniPicVis = this.visArray[CF_getVisID("AlbumArt")];
+
+            WriteLog("Stop");
         }
         
         void list_LinkedItemClick(object sender, CFControlsExtender.Listview.LinkedItemArgs e)
         {
+            WriteLog("Start");
+
             switch (e.LinkId)
             {
                 case "starred":
@@ -141,7 +339,7 @@ namespace Spotify
                         bool newValue = !track.IsStarred;
                         track.IsStarred = newValue;
 
-                        this.CF_systemCommand(CF_Actions.SHOWINFO, "Please wait...");
+                        this.CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/PleaseWait"));
                         ThreadPool.QueueUserWorkItem((o) =>
                             {
                                 try
@@ -175,10 +373,13 @@ namespace Spotify
                     }
                     break;
             }
+            WriteLog("Stop");
         }
 
         void list_DoubleClick(object sender, CFControlsExtender.Listview.ItemArgs e)
         {
+            WriteLog("Start");
+
             if (CurrentTab == Tabs.NowPlaying)
             {
                 if (e.ItemId < NowPlayingTable.Rows.Count)
@@ -206,7 +407,7 @@ namespace Spotify
                                 {
                                     if (!albumBrowser.IsComplete)
                                     {
-                                        CF_systemCommand(CF_Actions.SHOWINFO, "Please wait...");
+                                        CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/WaitForConnection"));
                                         SleepUntilTrue(() => albumBrowser.IsComplete);
                                         CF_systemCommand(CF_Actions.HIDEINFO);
                                     }
@@ -234,7 +435,7 @@ namespace Spotify
                                 {
                                     if (!artistBrowser.IsComplete)
                                     {
-                                        CF_systemCommand(CF_Actions.SHOWINFO, "Please wait...");
+                                        CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/WaitForConnection"));
                                         artistBrowser.WaitForCompletion();
                                         CF_systemCommand(CF_Actions.HIDEINFO);
                                     }
@@ -270,10 +471,13 @@ namespace Spotify
                     }
                 }
             }
+            WriteLog("Stop");
         }
 
         void list_LongClick(object sender, CFControlsExtender.Listview.ItemArgs e)
         {
+            WriteLog("Start");
+
             if (CurrentTab == Tabs.NowPlaying)
             {
                 if (e.ItemId < NowPlayingTable.Rows.Count)
@@ -282,7 +486,7 @@ namespace Spotify
                     if (currentTrack != null)
                     {
                         var choices = new string[] { "Album", "Artist" };
-                        var choiceDialog = new MultipleChoiceDialog(this.CF_displayHooks.displayNumber, this.CF_displayHooks.rearScreen, "Search for:", choices);
+                        var choiceDialog = new MultipleChoiceDialog(this.CF_displayHooks.displayNumber, this.CF_displayHooks.rearScreen, pluginLang.ReadField("/AppLang/Spotify/SearchFor"), choices);
                         choiceDialog.MainForm = base.MainForm;
                         choiceDialog.CF_pluginInit();
                         if (choiceDialog.ShowDialog(this) == DialogResult.OK)
@@ -295,7 +499,7 @@ namespace Spotify
                                     {
                                         if (!albumBrowser.IsComplete)
                                         {
-                                            CF_systemCommand(CF_Actions.SHOWINFO, "Please wait...");
+                                            CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/WaitForConnection"));
                                             albumBrowser.WaitForCompletion();
                                             CF_systemCommand(CF_Actions.HIDEINFO);
                                         }
@@ -318,7 +522,7 @@ namespace Spotify
                                     if (currentTrack.Artists.Count > 1)
                                     {
                                         choices = currentTrack.Artists.Select(a => a.Name).Take(5).ToArray();
-                                        choiceDialog = new MultipleChoiceDialog(this.CF_displayHooks.displayNumber, this.CF_displayHooks.rearScreen, "Search for:", choices);
+                                        choiceDialog = new MultipleChoiceDialog(this.CF_displayHooks.displayNumber, this.CF_displayHooks.rearScreen, pluginLang.ReadField("/AppLang/Spotify/SearchFor"), choices);
                                         choiceDialog.MainForm = base.MainForm;
                                         choiceDialog.CF_pluginInit();
                                         if (choiceDialog.ShowDialog(this) == DialogResult.OK)
@@ -337,7 +541,7 @@ namespace Spotify
                                     {
                                         if (!artistBrowser.IsComplete)
                                         {
-                                            CF_systemCommand(CF_Actions.SHOWINFO, "Please wait...");
+                                            CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/WaitForConnection"));
                                             artistBrowser.WaitForCompletion();
                                             CF_systemCommand(CF_Actions.HIDEINFO);
                                         }
@@ -352,6 +556,7 @@ namespace Spotify
                     }
                 }
             }
+            WriteLog("Stop");
         }
 
         private IEnumerable<IAlbum> GetAlbumsIncludingTopHits(IArtistBrowse browser)
@@ -616,23 +821,41 @@ namespace Spotify
         bool _hasControl = false;
         public override void CF_pluginShow()
         {
+            WriteLog("Start");
+
             base.CF_pluginShow();
             _hasControl = true;
             InitSpotifyClient();
 
             //[GrantA] Auto play music on show.
             if (currentTrack != null && isPaused && autoPlay)
-            {
                 Play();
-            }
+
+            miniPicVis.picVis.Visible = true;
+
+            WriteLog("Stop");
         }
+
+
+        //LK, 22-may-2016: Added to hide visualizations
+        public override void CF_pluginHide()
+        {
+            WriteLog("Start");
+
+            SaveNowPlayingToFile();     //LK,22-may-2016: Also save when Spotify screen is closed
+            miniPicVis.picVis.Visible = false;
+            base.CF_pluginHide();
+
+            WriteLog("Stop");
+        }
+
 
         private void InitSpotifyClient()
         {
+            WriteLog("Start");
+
             if (SpotifySession == null)
             {
-                LoadSettings();
-
                 if (!EnsureTempPathOK())
                 {
                     return;
@@ -640,14 +863,15 @@ namespace Spotify
 
                 if (string.IsNullOrEmpty(username))
                 {
-                    CF_displayMessage("Username not specified");
+                    CF_displayMessage(pluginLang.ReadField("/AppLang/Spotify/UserNameNotSpecified"));
                     return;
                 }
 
-                CF_systemCommand(CF_Actions.SHOWINFO, "Connecting to Spotify");
+                CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/Connecting"));
                 try
                 {
                     SpotifySession = SpotiFire.SpotifyLib.Spotify.CreateSession(applicationKey, tempPath, tempPath, userAgent);
+                    WriteLog("Session created" + SpotifySession.ToString() + ", Connection state = " + SpotifySession.ConnectionState.ToString());
                 }
                 catch (Exception ex)
                 {
@@ -659,23 +883,44 @@ namespace Spotify
                 {
                     CF_systemCommand(CF_Actions.HIDEINFO);
                 }
+
                 if (CF_getConnectionStatus())
                 {
                     SpotifySession.SetConnectionType(ConnectionType.Wired);
+                    WriteLog("Session connection type is set to " + ConnectionType.Wired);
                 }
                 else
                 {
                     SpotifySession.SetConnectionType(ConnectionType.None);
+                    WriteLog("Session connection type is set to " + ConnectionType.None);
                 }
                 SpotifySession.SetPrefferedBitrate(preferredBitrate);
                 DistributeSessionForSubscription(SpotifySession);
             }
+            else
+                WriteLog("Session already exists: " + SpotifySession.ToString() + ", Connection state = " + SpotifySession.ConnectionState.ToString() + ", Login completed = " + loginComplete);
+
             if (!loginComplete)
             {
+                WriteLog("Loading settings");
                 LoadSettings();
-                CF_systemCommand(CF_Actions.SHOWINFO, "Logging in");
-                SpotifySession.Login(username, password, true);
+                CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/loggingIn"));
+                if (SpotifySession.ConnectionState != sp_connectionstate.LOGGED_IN)	//LK, 11-jul-2016: Don't try to login when already logged in; just wait for completion
+                {
+                    WriteLog("Logging in");
+                    SpotifySession.Login(username, password, true);
+                }
+
+                //LK, 22-may-2016, Begin: Give the server some time to response
+                int retryCount = 5;
+                while ((SpotifySession.ConnectionState != sp_connectionstate.LOGGED_IN) && retryCount-- > 0)   //---   || !loginComplete
+                {
+                    Thread.Sleep(1000);
+                    WriteLog("Waiting for login to complete, connection status = " + SpotifySession.ConnectionState.ToString() + ", loginComplete = " + loginComplete);
+                }
+                //LK, 22-may-2016, End: Give the server some time to response
             }
+            WriteLog("Stop, Connection state = " + SpotifySession.ConnectionState.ToString());
         }
 
         private bool EnsureTempPathOK()
@@ -684,6 +929,10 @@ namespace Spotify
             {
                 if (!Directory.Exists(tempPath))
                     Directory.CreateDirectory(tempPath);
+
+                //LK, 22-may-2016: Also check if the image sub cache folder is present
+                if (!Directory.Exists(tempPath + Path.DirectorySeparatorChar + "Images"))
+                    Directory.CreateDirectory(tempPath + Path.DirectorySeparatorChar + "Images");
                 return true;
             }
             catch (Exception ex)
@@ -701,38 +950,149 @@ namespace Spotify
 
         public override void CF_pluginPause()
         {
+            WriteLog("Start");
+
             _hasControl = false;
-        
+
             if (currentTrack != null && !isPaused)
                 Pause();
+
+            Thread.Sleep(100);  //LK, 22-may-2016: Avoid plop
+
+            base.CF_pluginPause();
+
+            WriteLog("Stop");
         }
 
         public override void CF_pluginResume()
         {
+            WriteLog("Start");
+
             _hasControl = true;
 
-            //if (currentTrack != null && isPaused)
-            //    Play();
+            if (autoPlay)
+                InitSpotifyClient();    //LK, 22-may-2016: When autoPlay is set Initialize when not done already
+
+            if (currentTrack == null)
+            {
+                var list = advancedlistArray[CF_getAdvancedListID("mainList")];
+                if (list != null && list.Count > 0)
+                {
+                    if (list.SelectedIndex >= 0)
+                        currentTrack = NowPlayingTable.Rows[list.SelectedIndex]["TrackObject"] as ITrack;   //Start at the selected item in the list
+                    else
+                        currentTrack = NowPlayingTable.Rows[0]["TrackObject"] as ITrack;    //Start at the top of the list
+                }
+
+                if (currentTrack != null)
+                    PlayTrack(currentTrack);
+            }
+            else if (isPaused)
+                Play();
+
+            if (currentTrack == null && !autoPlay)
+                CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/NotLoggedIn"), "AUTOHIDE");
+
+            CF_setPlayPauseButton(!CF_params.Media.mediaPlaying, _zone); //LK, 22-may-2016: Set to actual state (in case Spotify didn't Autostart)
+            base.CF_pluginResume();
+
+            WriteLog("Stop");
         }
 
         public override void CF_pluginClose()
         {
-            PlaybackMonitor.Stop();
+            WriteLog("Start");
+
+
+            //LK, 22-may-2016: Unsubscribe event handlers
+            CF_events.powerModeChanged -= Spotify_CF_Event_powerModeChanged;
+            this.CF_events.trackPositionChanged -= CF_events_trackPositionChanged;
+            this.player.ChannelChangedEvent -= channelChangedHandler;
+
             if (SpotifySession != null)
             {
                 SaveNowPlayingToFile();
+                nowPlayingTableLoaded = false; //22-may-2016: Now playing list isn't valid any more
+
+                StopAllPlayback();              //22-may-2016: Moved after saving playlist, so currentTrack is stil valid
 
                 if (SpotifySession.ConnectionState == sp_connectionstate.LOGGED_IN)
                 {
+                    //LK, 15-jul-2016: Wait for log off to complete before exiting to avoid half opened sessions
                     SpotifySession.Logout();
+
+                    WriteLog("Waiting for log off to complete: Session state = " + SpotifySession.ConnectionState.ToString());
+                    SleepUntilTrue(() => SpotifySession.ConnectionState != sp_connectionstate.LOGGED_IN);
+                    WriteLog("Log off completed: Session state = " + SpotifySession.ConnectionState.ToString());
                 }
                 try
                 {
                     SpotifySession.Dispose();
+                    SpotifySession = null;
+                    WriteLog("Session disposed");
                 }
                 catch { }
             }
+
+            WriteLog("Stop");
+            base.CF_pluginClose();
         }
+
+        //LK, 22-may-2016, Begin: Add support for power mode change evnts
+        private void Spotify_CF_Event_powerModeChanged(object sender, Microsoft.Win32.PowerModeChangedEventArgs e)
+        {
+            WriteLog("Start, Mode = " + e.Mode.ToString());
+
+            try
+            {
+                if (SpotifySession != null)
+                {
+                    WriteLog("Session state = " + SpotifySession.ConnectionState.ToString() + ", MediaPlaying = " + this.CF_params.Media.mediaPlaying);
+
+                    if (e.Mode.Equals(Microsoft.Win32.PowerModes.Resume))
+                    {
+                        if (this.CF_params.Media.mediaPlaying)
+                        {
+                            this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
+                            {
+                                Thread.Sleep(powerResumeDelay);
+                                if (SpotifySession.ConnectionState == sp_connectionstate.LOGGED_OUT)
+                                    SpotifySession.Login(username, password, true);
+
+                                RestoreNowPlaying(true);
+                            }));
+                        }
+                    }
+                    else
+                    {
+                        StopAllPlayback();
+                        if (SpotifySession.ConnectionState == sp_connectionstate.LOGGED_IN)
+                            SpotifySession.Logout();
+                        nowPlayingTableLoaded = false;  //22-may-2016: Now playing list isn't valid any more
+                    }
+                }
+            }
+            catch (Exception errmsg) { WriteError(errmsg); }
+
+            WriteLog("Stop");
+        }
+        //LK, 22-may-2016, End: Add support for power mode change evnts
+
+        //LK, 22-may-2016, Begin: Add support event logging in the module specific file
+        private void WriteLog(string msg)
+        {
+            try
+            {
+                if (LogEvents)
+                    if (msg.Equals("startup"))
+                        CFTools.writeModuleLog(msg, LogFilePath);
+                    else
+                        CFTools.writeModuleLog((new StackTrace(true)).GetFrame(1).GetMethod().Name + ": " + msg, LogFilePath, CFTools.StackFramesToSkip.THREE);
+            }
+            catch (Exception errmsg) { CFTools.writeError(errmsg.Message, errmsg.StackTrace); }
+        }
+        //LK, 22-may-2016, End: Add support event logging in the module specific file
+
 
         private void WriteError(Exception ex)
         {
@@ -754,29 +1114,43 @@ namespace Spotify
 
         public override bool CF_pluginCMLCommand(string command, string[] strparams, CF_ButtonState state, int zone)
         {
-            if (!_hasControl)
+            WriteLog("Start, Command = " + command + ", button state = " + state);
+
+            //LK, 22-jul-2016: Threre is no use to not accepting commands when paused
+            //if (!_hasControl)
+            //    return false;
+
+            if (state < CF_ButtonState.Click) //LK, 01-aug-2016: Only click and hold click
+                return false;
+
+            string currMediaSource = base.MainForm
+            string currLocationParam;
+            CF_Actions currLocation = base.MainForm.CF_Main_getCurrentLocation(out currLocationParam);
+            if (currLocation != CF_Actions.PLUGIN || currLocationParam != CF_params.pluginName)
                 return false;
 
             _zone = zone;
             switch (command)
             {
                 case "Spotify.NowPlaying":
-                    if (state >= CF_ButtonState.Click)
                     {
                         LoadNowPlaying();
+                        return true;
                     }
-                    return true;
                 case "Spotify.Search":
-                    if (state == CF_ButtonState.Click)
                     {
                         LoadTrackSearch();
+                        return true;
                     }
-                    return true;
                 case "Spotify.SearchHold":
                     if (state == CF_ButtonState.HoldClick)
                     {
-                        var choices = new string[] { "Songs", "Albums", "Artists", "Playlists" };
-                        var choiceDialog = new MultipleChoiceDialog(this.CF_displayHooks.displayNumber, this.CF_displayHooks.rearScreen, "Search for:", choices);
+                        List<string> choices = new List<string>();
+                        choices.Add(pluginLang.ReadField("/AppLang/Spotify/Songs"));
+                        choices.Add(pluginLang.ReadField("/AppLang/Spotify/Albums"));
+                        choices.Add(pluginLang.ReadField("/AppLang/Spotify/Artists"));
+                        choices.Add(pluginLang.ReadField("/AppLang/Spotify/Playlists"));
+                        var choiceDialog = new MultipleChoiceDialog(this.CF_displayHooks.displayNumber, this.CF_displayHooks.rearScreen, pluginLang.ReadField("/AppLang/Spotify/SearchFor"), choices);
                         choiceDialog.MainForm = base.MainForm;
                         choiceDialog.CF_pluginInit();
                         if (choiceDialog.ShowDialog(this) == DialogResult.OK)
@@ -797,14 +1171,20 @@ namespace Spotify
                                     LoadPlaylistSearch();
                                     break;
                             }
+                            return true;
                         }
+                        else
+                            return false;
                     }
-                    return true;
+                    else
+                        return false;
                 case "Spotify.Inbox":
-                    if (state >= CF_ButtonState.Click)
                     {
-                        var choices = new string[] { "Songs", "Albums", "Playlists"};
-                        var choiceDialog = new MultipleChoiceDialog(this.CF_displayHooks.displayNumber, this.CF_displayHooks.rearScreen, "Retrieve Inbox of:", choices);
+                        List<string> choices = new List<string>();
+                        choices.Add(pluginLang.ReadField("/AppLang/Spotify/Songs"));
+                        choices.Add(pluginLang.ReadField("/AppLang/Spotify/Albums"));
+                        choices.Add(pluginLang.ReadField("/AppLang/Spotify/Playlists"));
+                        var choiceDialog = new MultipleChoiceDialog(this.CF_displayHooks.displayNumber, this.CF_displayHooks.rearScreen, pluginLang.ReadField("/AppLang/Spotify/RetrieveInboxOf"), choices);
                         choiceDialog.MainForm = base.MainForm;
                         choiceDialog.CF_pluginInit();
                         if (choiceDialog.ShowDialog(this) == DialogResult.OK)
@@ -823,19 +1203,21 @@ namespace Spotify
                                     break;
                             }
                         }
+                        return true;
                     }
-                    return true;
                 case "Spotify.Playlists":
-                    if (state >= CF_ButtonState.Click)
                     {
                         LoadPlaylists();
+                        return true;
                     }
-                    return true;
                 case "Spotify.Popular":
-                    if (state >= CF_ButtonState.Click)
                     {
-                        var choices = new string[] { "Songs", "Albums", "Artists", "Your starred songs" };
-                        var choiceDialog = new MultipleChoiceDialog(this.CF_displayHooks.displayNumber, this.CF_displayHooks.rearScreen, "Retrieve Top List Of:", choices);
+                        List<string> choices = new List<string>();
+                        choices.Add(pluginLang.ReadField("/AppLang/Spotify/Songs"));
+                        choices.Add(pluginLang.ReadField("/AppLang/Spotify/Albums"));
+                        choices.Add(pluginLang.ReadField("/AppLang/Spotify/Artists"));
+                        choices.Add(pluginLang.ReadField("/AppLang/Spotify/StarredSongs"));
+                        var choiceDialog = new MultipleChoiceDialog(this.CF_displayHooks.displayNumber, this.CF_displayHooks.rearScreen, pluginLang.ReadField("/AppLang/Spotify/RetrieveTopListOf"), choices);
                         choiceDialog.MainForm = base.MainForm;
                         choiceDialog.CF_pluginInit();
                         if (choiceDialog.ShowDialog(this) == DialogResult.OK)
@@ -857,83 +1239,92 @@ namespace Spotify
                                     break;
                             }
                         }
+                        else
+                            return false;
+                        return true;
                     }
-                    return true;
                 case "Spotify.ScrollUp":
-                    if (state >= CF_ButtonState.Click)
                     {
                         var list = advancedlistArray[CF_getAdvancedListID("mainList")];
                         list.PageUp();
+                        return true;
                     }
-                    return true;
                 case "Spotify.ScrollDown":
-                    if (state >= CF_ButtonState.Click)
                     {
                         var list = advancedlistArray[CF_getAdvancedListID("mainList")];
                         list.PageDown();
+                        return true;
                     }
-                    return true;
                 case "Spotify.DynamicButton1":
-                    if (state == CF_ButtonState.Click)
                     {
                         OnDynamic1Clicked();
+                        return true;
                     }
-                    return true;
                 case "Spotify.DynamicButton2":
-                    if (state == CF_ButtonState.Click)
                     {
                         OnDynamic2Clicked();
+                        return true;
                     }
-                    return true;
                 case "Spotify.DynamicButton1Hold":
                     if (state == CF_ButtonState.HoldClick)
                     {
                         OnDynamic1Hold();
+                        return true;
                     }
-                    return true;
+                    else
+                        return false;
                 case "Spotify.DynamicButton2Hold":
-                    if (state >= CF_ButtonState.HoldClick)
+                    if (state == CF_ButtonState.HoldClick)
                     {
                         OnDynamic2Hold();
+                        return true;
                     }
-                    return true;
+                    else
+                        return false;
                 case "Spotify.Back":
                     {
-                        if (state >= CF_ButtonState.Click)
-                        {
-                            OnBackClicked();
-                        }
+                        OnBackClicked();
+                        return true;
                     }
-                    return true;
                 case "Spotify.DynamicButton3":
                     {
-                        if (state >= CF_ButtonState.Click)
-                        {
-                            OnDynamic3Clicked();
-                        }
+                        OnDynamic3Clicked();
+                        return true;
                     }
-                    return true;
-                case "Centrafuse.Main.PlayPause":
-                    if (state >= CF_ButtonState.Click)
-                    {
-                        PlayPause();
-                    }
-                    return true;
+
+                //LK, 22-may-2016: Leave handling of this to CF
+                //case "Centrafuse.Main.PlayPause":
+                //{
+                //    PlayPause();
+                //    return true;
+                //}
+
+                //LK, 22-may-2016: Add support for more hotkeys
+                case "centrafuse.cfactions.PREVSONG":
+                case "Centrafuse.Plugin.Rewind":
                 case "Centrafuse.Main.Rewind":
-                    if (state >= CF_ButtonState.Click)
+                    if (this.CF_params.Media.mediaPlaying) //LK, 01-aug-2016: Only when this app is playing
                     {
                         PlayPreviousTrack(true);
+                        return true;
                     }
-                    return true;
+                    else
+                        return false;
+                //LK, 22-may-2016: Add support for more hotkeys
+                case "Plugin.Spotify.NextSong":
+                case "centrafuse.cfactions.NEXTSONG":
+                case "Centrafuse.Plugin.FastForward":
                 case "Centrafuse.Main.FastForward":
-                    if (state >= CF_ButtonState.Click)
+                    if (this.CF_params.Media.mediaPlaying) //LK, 01-aug-2016: Only when this app is playing
                     {
                         PlayNextTrack(true);
+                        return true;
                     }
-                    return true;
+                    else
+                        return false;
 
                 default:
-                    return base.CF_pluginCMLCommand(command, strparams, state, zone);
+                    return false;   //LK, 01-aug-2016: Leave this to the core:  //base.CF_pluginCMLCommand(command, strparams, state, zone);
             }
         }
 
@@ -955,29 +1346,39 @@ namespace Spotify
 
         public override string CF_pluginCMLData(CF_CMLTextItems textItem)
         {
-            switch (textItem)
-            {
-                case CF_CMLTextItems.MainTitle:
-                    return currentTrack == null ? String.Empty : currentTrack.Name;
-                case CF_CMLTextItems.MediaArtist:
-                    return currentTrack == null ? String.Empty : GetArtistsString(currentTrack.Artists);
-                case CF_CMLTextItems.MediaTitle:
-                    return currentTrack == null ? String.Empty : currentTrack.Name;
-                case CF_CMLTextItems.MediaAlbum:
-                    return currentTrack == null ? String.Empty : currentTrack.Album.Name;
-                case CF_CMLTextItems.MediaSource:
-                case CF_CMLTextItems.MediaStation:
-                    return "Spotify";
-                case CF_CMLTextItems.MediaDuration:
-                    return GetCurrentTrackDuration();
-                case CF_CMLTextItems.MediaPosition:
-                    return GetCurrentTrackPosition();
-                case CF_CMLTextItems.MediaSliderPosition:
-                    return GetCurrentTrackScrubberPosition();
+            //WriteLog("Start");
 
-                default:
-                    return base.CF_pluginCMLData(textItem);
-            }
+            if (currentTrack != null)   //LK, 22-may-2016: Only when track is valid
+                switch (textItem)
+                {
+                    case CF_CMLTextItems.MainTitle:
+                        return currentTrack == null ? String.Empty : currentTrack.Name;
+                    case CF_CMLTextItems.MediaArtist:
+                        return currentTrack == null ? String.Empty : GetArtistsString(currentTrack.Artists);
+                    case CF_CMLTextItems.MediaTitle:
+                        return currentTrack == null ? String.Empty : currentTrack.Name;
+                    case CF_CMLTextItems.MediaAlbum:
+                        return currentTrack == null ? String.Empty : currentTrack.Album.Name;
+                    case CF_CMLTextItems.MediaSource:
+                    case CF_CMLTextItems.MediaStation:
+                        return "Spotify";
+                    case CF_CMLTextItems.MediaFileName:
+                        if (string.IsNullOrEmpty(currentVisImagePath))
+                            return "VISOFF";
+                        else
+                            return currentVisImagePath;
+                    case CF_CMLTextItems.MediaDuration:
+                        return GetCurrentTrackDuration();
+                    case CF_CMLTextItems.MediaPosition:
+                        return GetCurrentTrackPosition();
+                    case CF_CMLTextItems.MediaSliderPosition:
+                        return GetCurrentTrackScrubberPosition();
+
+                    default:
+                        return base.CF_pluginCMLData(textItem);
+                }
+            else
+                return base.CF_pluginCMLData(textItem);
         }
 
         private string GetCurrentTrackScrubberPosition()
@@ -997,8 +1398,10 @@ namespace Spotify
         private TimeSpan currentTrackPositionOffset = new TimeSpan(0);
         private string GetCurrentTrackPosition()
         {
-            var timespan = player.Position + currentTrackPositionOffset;
-            return string.Format(timeFormat, timespan.Minutes, timespan.Seconds);
+            //LK, 22-may-2016: Add support for position count down (tine left to end of track)
+            bool positionCountDown = CF_getConfigFlag(CF_ConfigFlags.PositionCountDown);
+            var timespan = positionCountDown ? (currentTrack != null ? currentTrack.Duration : TimeSpan.Zero) - (player.Position + currentTrackPositionOffset): player.Position + currentTrackPositionOffset;
+            return (positionCountDown ? "-" : "") + string.Format(timeFormat, timespan.Minutes, timespan.Seconds);
         }
 
         private const string timeFormat = "{0}:{1:00}";
@@ -1032,17 +1435,17 @@ namespace Spotify
                         }
                     case GroupingType.Albums:
                         {
-                            CF_displayMessage("Can't add multiple albums at once");
+                            CF_displayMessage(pluginLang.ReadField("/AppLang/Spotify/CantAddMultipleAlbums"));
                             break;
                         }
                     case GroupingType.Artists:
                         {
-                            CF_displayMessage("Can't add multiple artists at once");
+                            CF_displayMessage(pluginLang.ReadField("/AppLang/Spotify/CantAddMultipleArtists"));
                             break;
                         }
                     case GroupingType.Playlists:
                         {
-                            CF_displayMessage("Can't add multiple playlists at once");
+                            CF_displayMessage(pluginLang.ReadField("/AppLang/Spotify/CantAddMultiplePlayLists"));
                             break;
                         }
                 }
@@ -1062,13 +1465,18 @@ namespace Spotify
                     var track = row["TrackObject"] as ITrack;
                     if (track == currentTrack)
                     {
-                        if (!PlayNextTrack(false))
+                        if (!PlayNextTrack(autoLoop))   //LK, 11-jun-2016: Also alow loop when enabled here
                             StopAllPlayback();
                     }
                     ShuffledTracks.Remove(track);
+                    NonShuffledTracks.Remove(track);
                     track.Dispose();
                     NowPlayingTable.Rows.Remove(row);
                     list.Refresh();
+                    //LK, 15-jul-2016: Save the now-playlist when changed
+                    if (nowPlayingTableLoaded)
+                        SaveNowPlayingToFile();
+
                 }
             }
             else
@@ -1099,7 +1507,7 @@ namespace Spotify
                     case GroupingType.Albums:
                         {
                             var album = selectedRow["AlbumObject"] as IAlbum;
-                            CF_systemCommand(CF_Actions.SHOWINFO, "Please Wait...");
+                            CF_systemCommand(CF_Actions.SHOWINFO, pluginLang.ReadField("/AppLang/Spotify/WaitForConnection"));
                             ThreadPool.QueueUserWorkItem(delegate(object obj)
                             {
                                 try
@@ -1159,14 +1567,19 @@ namespace Spotify
             {
                 var list = advancedlistArray[CF_getAdvancedListID("mainList")];
 
-                var dialogResult = CF_systemDisplayDialog(CF_Dialogs.YesNo, "Are you sure you want to clear your playlist?");
+                var dialogResult = CF_systemDisplayDialog(CF_Dialogs.YesNo, pluginLang.ReadField("/AppLang/Spotify/ConfirmClearPlaylist"));
                 if (dialogResult == System.Windows.Forms.DialogResult.OK || dialogResult == System.Windows.Forms.DialogResult.Yes)
                 {
                     StopAllPlayback();
                     Utility.DisposeTableDisposables(NowPlayingTable);
                     NowPlayingTable.Clear();
                     ShuffledTracks.Clear();
+                    NonShuffledTracks.Clear();
                     list.Refresh();
+
+                    //LK, 15-jul-2016: Save the now-playlist when changed and valid
+                    if (nowPlayingTableLoaded)
+                        SaveNowPlayingToFile();
                 }
             }
         }
@@ -1184,7 +1597,7 @@ namespace Spotify
                 var playlist = row["PlaylistObject"] as IPlaylist;
                 if (playlist.OfflineStatus == PlaylistOfflineStatus.No)
                 {
-                    var result = CF_systemDisplayDialog(CF_Dialogs.YesNo, "Would you like to make this playlist available offline?");
+                    var result = CF_systemDisplayDialog(CF_Dialogs.YesNo, pluginLang.ReadField("/AppLang/Spotify/ConfirmOfflinePlaylist"));
                     if (result == System.Windows.Forms.DialogResult.OK || result == System.Windows.Forms.DialogResult.Yes)
                     {
                         playlist.SetOfflineMode(true);
@@ -1192,7 +1605,7 @@ namespace Spotify
                 }
                 else
                 {
-                    var result = CF_systemDisplayDialog(CF_Dialogs.YesNo, "This playlist will no longer be available offline. Proceed?");
+                    var result = CF_systemDisplayDialog(CF_Dialogs.YesNo, pluginLang.ReadField("/AppLang/Spotify/ConfirmUnavailOfflinePlaylist"));
                     if (result == System.Windows.Forms.DialogResult.OK || result == System.Windows.Forms.DialogResult.Yes)
                     {
                         playlist.SetOfflineMode(false);
@@ -1204,13 +1617,28 @@ namespace Spotify
 
         private void AppendTracks(IEnumerable<ITrack> tracks)
         {
+            //Ignore tracks that are already in the list
             var allNowPlayingTracks = NowPlayingTable.Rows.Cast<DataRow>().Select(row => row["TrackObject"] as ITrack);
             tracks = tracks.Where(t => !allNowPlayingTracks.Contains(t));
+
             if (tracks.Count() > 0)
             {
+                if (!nowPlayingTableLoaded)
+                    RestoreNowPlaying(false);
+
+                //LK, 15-jul-2016: Warn user when overwriting an unloaded playlist
+                if (!nowPlayingTableLoaded)
+                {
+                    var result = CF_systemDisplayDialog(CF_Dialogs.YesNo, pluginLang.ReadField("/AppLang/Spotify/ConfirmNowPlayingListNotLoaded"));
+                    if (result != System.Windows.Forms.DialogResult.OK && result != System.Windows.Forms.DialogResult.Yes)
+                    {
+                        return;
+                    }
+                }
+
                 if (tracks.Count() > 1)
                 {
-                    var result = CF_systemDisplayDialog(CF_Dialogs.YesNo, string.Format("You are about to add {0} tracks.{1}Are you sure?", tracks.Count(), Environment.NewLine));
+                    var result = CF_systemDisplayDialog(CF_Dialogs.YesNo, string.Format(pluginLang.ReadField("/AppLang/Spotify/ConfirmAddMultipleTracks"), tracks.Count(), Environment.NewLine));
                     if (result != System.Windows.Forms.DialogResult.OK && result != System.Windows.Forms.DialogResult.Yes)
                     {
                         return;
@@ -1227,17 +1655,24 @@ namespace Spotify
                     newRow["Artist"] = GetArtistsString(clonedTrack.Artists);
                     newRow["Album"] = clonedTrack.Album.Name;
                     newRow["Starred"] = GetStarredStatusString(clonedTrack.IsStarred);
+                    newRow["Available"] = GetAvailableStatusString(clonedTrack.IsAvailable, false);
                     newRow["TrackObject"] = clonedTrack;
-                    this.NowPlayingTable.Rows.Add(newRow);
 
-                    tracksToShuffle.Add(clonedTrack);
+                    this.NowPlayingTable.Rows.Add(newRow);
+                    nowPlayingTableLoaded = true;       //LK, 15-jul-2015: Now-Playinglist is now valid (when it wasn't already)
+
+                    if (clonedTrack.IsAvailable)    //LK, 11-jun-2016: Only add available tracks to shuffled and non-shuffled lists
+                    {
+                        tracksToShuffle.Add(clonedTrack);
+                        NonShuffledTracks.AddLast(clonedTrack);
+                    }
                 }
 
                 IEnumerable<ITrack> songsToAppend = null;
                 if (currentTrack != null)
                 {
                     var songNode = ShuffledTracks.Find(currentTrack);
-                    if (songNode.Next != null)
+                    if (songNode!=null && songNode.Next != null)
                     {
                         //there are songs after the ones we're playing right now
                         var trimmedPlaylist = ShuffledTracks.TakeWhile(s => s != songNode.Next.Value).ToArray();
@@ -1269,6 +1704,10 @@ namespace Spotify
                         PlayTrack(NowPlayingTable.Rows[0]["TrackObject"] as ITrack);
                     }
                 }
+
+                //LK, 15-jul-2016: Save the now-playlist when changed and valid
+                if (nowPlayingTableLoaded)
+                    SaveNowPlayingToFile();
             }
         }
 
@@ -1287,9 +1726,11 @@ namespace Spotify
         {
             if (SpotifySession == null || !loginComplete)
             {
-                CF_displayMessage("You are not logged in");
+                WriteLog("Login NOT complete");
+                CF_displayMessage(pluginLang.ReadField("/AppLang/Spotify/NotLoggedIn"));
                 return false;
             }
+            WriteLog("Login complete");
             return true;
         }
 
@@ -1297,19 +1738,25 @@ namespace Spotify
         {
             if (SpotifySession == null || !loginComplete)
             {
-                CF_displayMessage("You are not logged in");
+                WriteLog("Login NOT complete");
+                CF_displayMessage(pluginLang.ReadField("/AppLang/Spotify/NotLoggedIn"));
                 return false;
             }
             if (!this.CF_getConnectionStatus())
             {
-                CF_displayMessage("You need to be online");
+                WriteLog("Login NOT on-line");
+                CF_displayMessage(pluginLang.ReadField("/AppLang/Spotify/NeedToBeOnline"));
                 return false;
             }
+
+            WriteLog("On-line and login complete");
             return true;
         }
 
         public override DialogResult CF_pluginShowSetup()
         {
+            WriteLog("Start");
+
             // Return DialogResult.OK for the main application to update from plugin changes.
             DialogResult returnvalue = DialogResult.Cancel;
 
@@ -1336,12 +1783,25 @@ namespace Spotify
             }
             catch (Exception errmsg) { CFTools.writeError(errmsg.ToString()); }
 
+
+            WriteLog("Stop");
             return returnvalue;
         }
 
         private bool LoadSettings()
         {
             bool retValue = false;
+
+            // Note: this is function is also called when there where changes made during setup
+            //  So, the display name may be changed
+            if (CF_params.displayName != pluginLang.ReadField("/AppLang/Spotify/DisplayName"))
+                CF_params.displayName = pluginLang.ReadField("/AppLang/Spotify/DisplayName");
+
+            if (CF_params.settingsDisplayName != pluginLang.ReadField("/AppLang/Spotify/DisplayName"))
+                CF_params.settingsDisplayName = pluginLang.ReadField("/AppLang/Spotify/DisplayName");
+
+            if (CF_params.settingsDisplayDesc != pluginLang.ReadField("/AppLang/Spotify/Description"))
+                CF_params.settingsDisplayDesc = pluginLang.ReadField("/AppLang/Spotify/Description");
 
             string newUsername = this.pluginConfig.ReadField("/APPCONFIG/USERNAME");
             if (newUsername != username)
@@ -1389,6 +1849,24 @@ namespace Spotify
                 }
             }
 
+            //LK, 22-may-2016: Add powerResumeDelay parameter to allow the computer to reconnect to the Internet
+            string powerResumeDelayString = this.pluginConfig.ReadField("/APPCONFIG/POWERRESUMEDELAY");
+            if (string.IsNullOrEmpty(powerResumeDelayString))
+            {
+                powerResumeDelay = 5000;
+            }
+            else
+            {
+                try
+                {
+                    powerResumeDelay = int.Parse(powerResumeDelayString);
+                }
+                catch
+                {
+                    powerResumeDelay = 5000;
+                }
+            }
+
             //[GrantA] Load music auto play setting.
             string newAutoPlay = this.pluginConfig.ReadField("/APPCONFIG/AUTOPLAY");
             if (newAutoPlay.Equals("True"))
@@ -1400,8 +1878,130 @@ namespace Spotify
                 autoPlay = false;
             }
 
+            //LK, 22-may-2016: Add support for auto loop playlists
+            string newAutoLoop = this.pluginConfig.ReadField("/APPCONFIG/AUTOLOOP");
+            if (newAutoLoop.Equals("True"))
+            {
+                autoLoop = true;
+            }
+            else
+            {
+                autoLoop = false;
+            }
+
+            //LK, 22-may-2016: Add support for module event logging
+            string newLogEvents = this.pluginConfig.ReadField("/APPCONFIG/LOGEVENTS");
+            if (newLogEvents.Equals("True"))
+            {
+                LogEvents = true;
+            }
+            else
+            {
+                LogEvents = false;
+            }
+
             return retValue;
         }
+
+
+        //LK, 22-may-2016, Begin: Add support for album art and visualizations
+        internal void SetVisImage(Image visimage, string imageId)
+        {
+            WriteLog("Start");
+
+            try
+            {
+                if (miniPicVis != null)
+                {
+                    if (visimage != null)
+                    {
+                        Image tempImage = ResizeToFitBox((Image)visimage.Clone(), new Rectangle(new Point(), visimage.Size));
+                        string visImagePath = tempPath + Path.DirectorySeparatorChar + "Images" + Path.DirectorySeparatorChar + "VisImage_" + imageId + ".png";
+                        if (!File.Exists(visImagePath))
+                            tempImage.Save(visImagePath, System.Drawing.Imaging.ImageFormat.Png);
+                        currentVisImagePath = visImagePath;
+
+                        if (!pluginNonBufferedVisSupport)
+                        {
+                            miniPicVis.picVis.Image = tempImage;
+                            if (miniPicVis.picVis.Image != null)
+                            {
+                                miniPicVis.picVis.SizeMode = PictureBoxSizeMode.StretchImage;
+                            }
+                            else
+                            {
+                                currentVisImagePath = "NOVIS";
+                            }
+                        }
+                        miniPicVis.picVis.Invalidate();
+                    }
+                    else
+                        currentVisImagePath = "NOVIS";
+                }
+            }
+            catch (Exception ex) { CFTools.writeError("Spotify:" + ex.Message, ex.StackTrace); }
+
+            WriteLog("Stop");
+        }
+
+
+        public override IntPtr CF_pluginVisPicHandle()
+        {
+            try
+            {
+                if (miniPicVis != null)
+                    return miniPicVis.picVis.Handle;
+            }
+            catch (Exception errmsg) { CFTools.writeError(errmsg.Message, errmsg.StackTrace); }
+            return IntPtr.Zero;
+        }
+
+
+        public override void CF_pluginResetVis()
+        {
+            try
+            {
+                if (miniPicVis != null)
+                    miniPicVis.ResetVis();
+            }
+            catch (Exception errmsg) { CFTools.writeError(errmsg.Message, errmsg.StackTrace); }
+        }
+
+
+        public override void CF_pluginSetVisImage(Image visimage)
+        {
+            WriteLog("Start");
+
+            try
+            {
+                if (miniPicVis != null)
+                {
+                    miniPicVis.picVis.Image = visimage;
+                    miniPicVis.picVis.SizeMode = PictureBoxSizeMode.StretchImage;
+                    miniPicVis.picVis.Invalidate();
+                }
+            }
+            catch (Exception ex) { CFTools.writeError("Spotify:" + ex.Message, ex.StackTrace); }
+
+            WriteLog("Stop");
+        }
+
+
+        public override Rectangle CF_pluginGetVisBounds()
+        {
+            WriteLog("Start");
+
+            try
+            {
+                if (miniPicVis != null)
+                    return miniPicVis.picVis.Bounds;
+            }
+            catch (Exception ex) { CFTools.writeError("Spotify:" + ex.Message, ex.StackTrace); }
+            return new Rectangle(0, 0, 0, 0);
+        }
+        //LK, 22-may-2016, End: Add support for album art and visualizations
+
+
 
         public Form ParentForm
         {

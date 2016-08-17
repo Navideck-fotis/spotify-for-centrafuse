@@ -28,110 +28,113 @@
     <BUTTONIMAGE id="straightDown" path="straightDown.png" />
   </BUTTONIMAGES>
   <SECTIONS>
-    <SECTION id="Main" effect="ToApp" bounds="0;88;800;304" off="Main_Off" down="Main_On">
+    <SECTION id="Spotify" effect="ToApp" bounds="0;88;800;304" off="Main_Off" down="Main_On">
       <CONTROLS>
-        <CONTROL type="Button" id="Spotify.nowPlayingButton" bounds="2;2;83;60" effect="" tabindex="0" enabled="true" cmlaction="Spotify.NowPlaying" />
-        <CONTROL type="Button" id="Spotify.playlistsButton" bounds="2;122;83;59" effect="" tabindex="0" enabled="true" cmlaction="Spotify.Playlists" />
-        <CONTROL type="Button" id="Spotify.inboxButton" bounds="2;182;83;58" effect="" tabindex="0" enabled="true" cmlaction="Spotify.Inbox" />
-        <CONTROL type="Button" id="Spotify.popularButton" bounds="2;242;83;59" effect="" tabindex="0" enabled="true" cmlaction="Spotify.Popular" />
-        <CONTROL type="Button" id="Spotify.search" bounds="2;62;83;60" effect="" tabindex="0" enabled="true" cmlaction="Spotify.Search" holdcmlaction="Spotify.SearchHold" holdtime="1" />
-        <CONTROL type="AdvancedList" id="mainList" bounds="97;54;446;240" effect="" tabindex="0" enabled="true">
+        <CONTROL type="Button" id="Spotify.nowPlayingButton"  bounds="  2;  2; 83; 60" effect="" tabindex="0" enabled="true" cmlaction="Spotify.NowPlaying" />
+        <CONTROL type="Button" id="Spotify.playlistsButton"   bounds="  2;122; 83; 59" effect="" tabindex="0" enabled="true" cmlaction="Spotify.Playlists" />
+        <CONTROL type="Button" id="Spotify.inboxButton"       bounds="  2;182; 83; 58" effect="" tabindex="0" enabled="true" cmlaction="Spotify.Inbox" />
+        <CONTROL type="Button" id="Spotify.popularButton"     bounds="  2;242; 83; 59" effect="" tabindex="0" enabled="true" cmlaction="Spotify.Popular" />
+        <CONTROL type="Button" id="Spotify.search"            bounds="  2; 62; 83; 60" effect="" tabindex="0" enabled="true" cmlaction="Spotify.Search" holdcmlaction="Spotify.SearchHold" holdtime="1" />
+        <CONTROL type="AdvancedList" id="mainList"            bounds=" 97; 54;446;240" effect="" tabindex="0" enabled="true">
           <LAYOUT>
             <TEMPLATES>
               <TEMPLATE id="default" selectable="true" layout="Stacked" baseSize="446;240" scrollbarStyleId="Scrollbar">
                 <ITEMGROUP type="Default" size="446;60">
-                  <ITEM id="Name" type="Text" position="7;7" size="399;21" dataSource="Name" styleId="Title" />
-                  <ITEM id="Artist" type="Text" position="10;27" size="396;21" dataSource="Artist" styleId="Artist" />
-                  <ITEM id="Album" type="Text" position="10;43" size="396;21" dataSource="Album" styleId="Album" />
-                  <ITEM id="Line" type="Image" position="0;59" size="446;1" dataSource="cache:Separator.png" styleId="Image.Fit" />
+                  <ITEM id="Name"                     type="Text"   position="  7; 7" size="399;21" dataSource="Name"                       styleId="Title" />
+                  <ITEM id="Artist"                   type="Text"   position=" 10;27" size="396;21" dataSource="Artist"                     styleId="Artist" />
+                  <ITEM id="Album"                    type="Text"   position=" 10;43" size="396;21" dataSource="Album"                      styleId="Album" />
+                  <ITEM id="Starred"                  type="Image"  position="410; 3" size=" 29;29" dataSource="Starred{[value].png}"       styleId="Image.Fit" linkId="starred" />
+                  <ITEM id="Available"                type="Image"  position="410;25" size=" 29;29" dataSource="Available{[value].png}"     styleId="Image.Fit" linkId="" />
+                  <ITEM id="Line"                     type="Image"  position="  0;59" size="446; 1" dataSource="cache:Separator.png"        styleId="Image.Fit" />
                 </ITEMGROUP>
                 <ITEMGROUP type="Selected" size="446;60">
-                  <ITEM id="Background" type="Image" position="2;0" size="444;60" dataSource="cache:SelectionBar.png" styleId="Image.Fit" />
-                  <ITEM id="Name" type="Text" position="7;7" size="394;21" dataSource="Name" styleId="Title.Selected" />
-                  <ITEM id="Artist" type="Text" position="10;27" size="391;21" dataSource="Artist" styleId="Artist.Selected" />
-                  <ITEM id="Album" type="Text" position="10;43" size="391;21" dataSource="Album" styleId="Album.Selected" />
-                  <ITEM id="Starred" type="Image" position="400;15" size="29;29" linkId="starred" dataSource="Starred{[value].png}" styleId="Image.Fit" />
-                  <ITEM id="Line" type="Image" position="0;59" size="446;1" dataSource="cache:Separator.png" styleId="Image.Fit" />
+                  <ITEM id="Background"               type="Image"  position="  2; 0" size="444;60" dataSource="cache:SelectionBar.png"     styleId="Image.Fit" />
+                  <ITEM id="Name"                     type="Text"   position="  7; 7" size="394;21" dataSource="Name"                       styleId="Title.Selected" />
+                  <ITEM id="Artist"                   type="Text"   position=" 10;27" size="391;21" dataSource="Artist"                     styleId="Artist.Selected" />
+                  <ITEM id="Album"                    type="Text"   position=" 10;43" size="391;21" dataSource="Album"                      styleId="Album.Selected" />
+                  <ITEM id="Starred"                  type="Image"  position="410; 3" size=" 29;29" dataSource="Starred{[value].png}"       styleId="Image.Fit" linkId="starred" />
+                  <ITEM id="Available"                type="Image"  position="410;25" size=" 29;29" dataSource="Available{[value].png}"     styleId="Image.Fit" linkId="" />
+                  <ITEM id="Line"                     type="Image"  position="  0;59" size="446; 1" dataSource="cache:Separator.png"        styleId="Image.Fit" />
                 </ITEMGROUP>
               </TEMPLATE>
               <TEMPLATE id="spotifyAlbums" selectable="true" layout="Stacked" baseSize="446;240" scrollbarStyleId="Scrollbar">
                 <ITEMGROUP type="Default" size="446;60">
-                  <ITEM id="Name" type="Text" position="7;14" size="439;21" dataSource="Name" styleId="Title" />
-                  <ITEM id="Artist" type="Text" position="10;32" size="436;21" dataSource="Artist" styleId="Artist" />
-                  <ITEM id="Line" type="Image" position="0;59" size="446;1" dataSource="cache:Separator.png" styleId="Image.Fit" />
+                  <ITEM id="Name"                     type="Text"   position="  7;14" size="439;21" dataSource="Name"                       styleId="Title" />
+                  <ITEM id="Artist"                   type="Text"   position=" 10;32" size="436;21" dataSource="Artist"                     styleId="Artist" />
+                  <ITEM id="Line"                     type="Image"  position="  0;59" size="446; 1" dataSource="cache:Separator.png"        styleId="Image.Fit" />
                 </ITEMGROUP>
                 <ITEMGROUP type="Selected" size="446;60">
-                  <ITEM id="Background" type="Image" position="2;0" size="444;60" dataSource="cache:SelectionBar.png" styleId="Image.Fit" />
-                  <ITEM id="Name" type="Text" position="7;14" size="439;21" dataSource="Name" styleId="Title.Selected" />
-                  <ITEM id="Artist" type="Text" position="10;32" size="436;21" dataSource="Artist" styleId="Artist.Selected" />
-                  <ITEM id="Line" type="Image" position="0;59" size="446;1" dataSource="cache:Separator.png" styleId="Image.Fit" />
+                  <ITEM id="Background"               type="Image"  position="  2; 0" size="444;60" dataSource="cache:SelectionBar.png"     styleId="Image.Fit" />
+                  <ITEM id="Name"                     type="Text"   position="  7;14" size="439;21" dataSource="Name"                       styleId="Title.Selected" />
+                  <ITEM id="Artist"                   type="Text"   position=" 10;32" size="436;21" dataSource="Artist"                     styleId="Artist.Selected" />
+                  <ITEM id="Line"                     type="Image"  position="  0;59" size="446; 1" dataSource="cache:Separator.png"        styleId="Image.Fit" />
                 </ITEMGROUP>
               </TEMPLATE>
               <TEMPLATE id="spotifyPlaylists" selectable="true" layout="Stacked" baseSize="446;240" scrollbarStyleId="Scrollbar">
                 <ITEMGROUP type="Default" size="446;60">
-                  <ITEM id="Name" type="Text" position="7;14" size="353;21" dataSource="Name" styleId="Title" />
-                  <ITEM id="Description" type="Text" position="10;32" size="350;21" dataSource="Description" styleId="Description" />
-                  <ITEM id="OfflineAvailabilityIcon" type="Image" position="410;15" size="30;30" linkId="" dataSource="OfflineStatus{[value].png}" styleId="Image.Fit" />
-                  <ITEM id="DownloadingStatus" type="Text" position="365;20" size="40;21" dataSource="DownloadingStatus" styleId="Description" />
-                  <ITEM id="Line" type="Image" position="0;59" size="446;1" dataSource="cache:Separator.png" styleId="Image.Fit" />
+                  <ITEM id="Name"                     type="Text"   position="  7;14" size="393;21" dataSource="Name"                       styleId="Title" />
+                  <ITEM id="Description"              type="Text"   position=" 10;32" size="390;21" dataSource="Description"                styleId="Description" />
+                  <ITEM id="DownloadingStatus"        type="Text"   position="400;04" size=" 40;21" dataSource="DownloadingStatus"          styleId="Description" />
+                  <ITEM id="OfflineAvailabilityIcon"  type="Image"  position="405;25" size=" 30;30" dataSource="OfflineStatus{[value].png}" styleId="Image.Fit" linkId="" />
+                  <ITEM id="Line"                     type="Image"  position="  0;59" size="446; 1" dataSource="cache:Separator.png"        styleId="Image.Fit" />
                 </ITEMGROUP>
                 <ITEMGROUP type="Selected" size="446;60">
-                  <ITEM id="Background" type="Image" position="2;0" size="444;60" dataSource="cache:SelectionBar.png" styleId="Image.Fit" />
-                  <ITEM id="Name" type="Text" position="7;14" size="353;21" dataSource="Name" styleId="Title.Selected" />
-                  <ITEM id="OfflineAvailabilityIcon" type="Image" position="410;15" size="30;30" linkId="" dataSource="OfflineStatus{[value].png}" styleId="Image.Fit" />
-                  <ITEM id="DownloadingStatus" type="Text" position="365;20" size="40;21" dataSource="DownloadingStatus" styleId="Description.Selected" />
-                  <ITEM id="Description" type="Text" position="10;32" size="350;21" dataSource="Description" styleId="Description.Selected" />
-                  <ITEM id="Line" type="Image" position="0;59" size="446;1" dataSource="cache:Separator.png" styleId="Image.Fit" />
+                  <ITEM id="Background"               type="Image"  position="  2; 0" size="444;60" dataSource="cache:SelectionBar.png"     styleId="Image.Fit" />
+                  <ITEM id="Name"                     type="Text"   position="  7;14" size="393;21" dataSource="Name"                       styleId="Title.Selected" />
+                  <ITEM id="Description"              type="Text"   position=" 10;32" size="390;21" dataSource="Description"                styleId="Description.Selected" />
+                  <ITEM id="DownloadingStatus"        type="Text"   position="400;04" size=" 40;21" dataSource="DownloadingStatus"          styleId="Description.Selected" />
+                  <ITEM id="OfflineAvailabilityIcon"  type="Image"  position="405;25" size=" 30;30" dataSource="OfflineStatus{[value].png}" styleId="Image.Fit" linkId="" />
+                  <ITEM id="Line"                     type="Image"  position="  0;59" size="446; 1" dataSource="cache:Separator.png"        styleId="Image.Fit" />
                 </ITEMGROUP>
               </TEMPLATE>
               <TEMPLATE id="spotifyArtists" selectable="true" layout="Stacked" baseSize="446;240" scrollbarStyleId="Scrollbar">
                 <ITEMGROUP type="Default" size="446;60">
-                  <ITEM id="Name" type="Text" position="7;20" size="439;21" dataSource="Name" styleId="Title" />
-                  <ITEM id="Line" type="Image" position="0;59" size="446;1" dataSource="cache:Separator.png" styleId="Image.Fit" />
+                  <ITEM id="Name"                     type="Text"   position="  7;20" size="439;21" dataSource="Name"                       styleId="Title" />
+                  <ITEM id="Line"                     type="Image"  position="  0;59" size="446; 1" dataSource="cache:Separator.png"        styleId="Image.Fit" />
                 </ITEMGROUP>
                 <ITEMGROUP type="Selected" size="446;60">
-                  <ITEM id="Background" type="Image" position="2;0" size="444;60" dataSource="cache:SelectionBar.png" styleId="Image.Fit" />
-                  <ITEM id="Name" type="Text" position="7;20" size="439;21" dataSource="Name" styleId="Title.Selected" />
-                  <ITEM id="Line" type="Image" position="0;59" size="446;1" dataSource="cache:Separator.png" styleId="Image.Fit" />
+                  <ITEM id="Background"               type="Image"  position="  2; 0" size="444;60" dataSource="cache:SelectionBar.png"     styleId="Image.Fit" />
+                  <ITEM id="Name"                     type="Text"   position="  7;20" size="439;21" dataSource="Name"                       styleId="Title.Selected" />
+                  <ITEM id="Line"                     type="Image"  position="  0;59" size="446; 1" dataSource="cache:Separator.png"        styleId="Image.Fit" />
                 </ITEMGROUP>
               </TEMPLATE>
             </TEMPLATES>
             <STYLES>
-              <STYLE id="Title" color="#ffffff" hAlignment="Left" vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="1" trimming="true" case="Title" />
-              <STYLE id="Title.Selected" color="#000000" hAlignment="Left" vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="1" trimming="true" case="Title" />
-              <STYLE id="Description" color="#ffffff" hAlignment="Left" vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="3" trimming="true" case="Title" />
-              <STYLE id="Description.Selected" color="#000000" hAlignment="Left" vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="3" trimming="true" case="Title" />
-              <STYLE id="Artist" color="#ffffff" hAlignment="Left" vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="3" trimming="true" case="Title" />
-              <STYLE id="Artist.Selected" color="#000000" hAlignment="Left" vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="3" trimming="true" case="Title" />
-              <STYLE id="Album" color="#ffffff" hAlignment="Left" vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="3" trimming="true" case="Title" />
-              <STYLE id="Album.Selected" color="#000000" hAlignment="Left" vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="3" trimming="true" case="Title" />
-              <STYLE id="Image.Fit" hAlignment="Fit" vAlignment="Fit" />
-              <STYLE id="Scrollbar" color="#FFFFFF" hAlignment="Right" vAlignment="Bottom" leftIndent="0" rightIndent="0" option="size:10;radius:2;minsize:32" />
+              <STYLE id="Title"                 color="#ffffff" hAlignment="Left"  vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="1" trimming="true" case="Title" />
+              <STYLE id="Title.Selected"        color="#000000" hAlignment="Left"  vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="1" trimming="true" case="Title" />
+              <STYLE id="Description"           color="#ffffff" hAlignment="Left"  vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="3" trimming="true" case="Title" />
+              <STYLE id="Description.Selected"  color="#000000" hAlignment="Left"  vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="3" trimming="true" case="Title" />
+              <STYLE id="Artist"                color="#ffffff" hAlignment="Left"  vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="3" trimming="true" case="Title" />
+              <STYLE id="Artist.Selected"       color="#000000" hAlignment="Left"  vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="3" trimming="true" case="Title" />
+              <STYLE id="Album"                 color="#ffffff" hAlignment="Left"  vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="3" trimming="true" case="Title" />
+              <STYLE id="Album.Selected"        color="#000000" hAlignment="Left"  vAlignment="Middle" leftIndent="0" rightIndent="0" fontId="3" trimming="true" case="Title" />
+              <STYLE id="Image.Fit"                             hAlignment="Fit"   vAlignment="Fit" />
+              <STYLE id="Scrollbar"             color="#FFFFFF" hAlignment="Right" vAlignment="Bottom" leftIndent="0" rightIndent="0" option="size:10;radius:2;minsize:32" />
             </STYLES>
             <FONTS include=".\Skins\Clean\listview\CommonFonts.xml" />
           </LAYOUT>
         </CONTROL>
-        <CONTROL type="PictureBox" id="pictureBox" bounds="653;12;113;113" image="" background="False" />
-        <CONTROL type="Button" id="Spotify.UpButton" bounds="546;2;81;149" effect="" tabindex="0" enabled="true" cmlaction="Spotify.ScrollUp" />
-        <CONTROL type="Button" id="Spotify.DownButton" bounds="546;152;81;149" effect="" tabindex="0" enabled="true" cmlaction="Spotify.ScrollDown" />
-        <CONTROL type="DynButton" id="DynamicButton1" bounds="653;200;113;40" effect="" tabindex="0" enabled="true" cmlaction="Spotify.DynamicButton1" down="addSelectedDown" off="addSelected" holdcmlaction="Spotify.DynamicButton1Hold" holdtime="2" />
-        <CONTROL type="DynButton" id="DynamicButton2" bounds="652;250;113;40" effect="" tabindex="0" enabled="true" cmlaction="Spotify.DynamicButton2" down="addAllDown" off="addAll" holdcmlaction="Spotify.DynamicButton2Hold" holdtime="2" />
-        <CONTROL type="Label" id="LocationLabel" bounds="165;12;375;29" fontclass="LabelFont" fontstyle="style:bold;" textenable="True" />
-        <CONTROL type="Button" id="Spotify.Back" bounds="97;5;63;42" effect="" tabindex="0" enabled="true" cmlaction="Spotify.Back" />
-        <CONTROL type="DynButton" id="DynamicButton3" bounds="653;150;113;40" effect="" tabindex="0" enabled="true" off="offline" down="offlineDown" cmlaction="Spotify.DynamicButton3" />
+        <CONTROL type="Visualization" id="AlbumArt"     bounds="638;  6;149;149" />
+        <CONTROL type="Button" id="Spotify.UpButton"    bounds="546;  2; 81;149" effect="" tabindex="0" enabled="true" cmlaction="Spotify.ScrollUp" />
+        <CONTROL type="Button" id="Spotify.DownButton"  bounds="546;152; 81;149" effect="" tabindex="0" enabled="true" cmlaction="Spotify.ScrollDown" />
+        <CONTROL type="DynButton" id="DynamicButton3"   bounds="653;150;113; 40" effect="" tabindex="0" enabled="true" cmlaction="Spotify.DynamicButton3" down="offlineDown"      off="offline" />
+        <CONTROL type="DynButton" id="DynamicButton1"   bounds="653;200;113; 40" effect="" tabindex="0" enabled="true" cmlaction="Spotify.DynamicButton1" down="addSelectedDown"  off="addSelected" holdcmlaction="Spotify.DynamicButton1Hold" holdtime="2" />
+        <CONTROL type="DynButton" id="DynamicButton2"   bounds="653;250;113; 40" effect="" tabindex="0" enabled="true" cmlaction="Spotify.DynamicButton2" down="addAllDown"       off="addAll"      holdcmlaction="Spotify.DynamicButton2Hold" holdtime="2" />
+        <CONTROL type="Button" id="Spotify.Back"        bounds=" 97;  5; 63; 42" effect="" tabindex="0" enabled="true" cmlaction="Spotify.Back" />
+        <CONTROL type="Label" id="LocationLabel"        bounds="165; 12;375; 29" fontclass="LabelFont" fontstyle="style:bold;" textenable="True" />
       </CONTROLS>
     </SECTION>
   </SECTIONS>
   <DIALOGS>
     <DIALOG id="MultipleChoiceDialog" effect="ToApp" bounds="207,40;398;393" off="dialog_off" down="dialog_on">
       <CONTROLS>
-        <CONTROL type="Label" id="Spotify.TitleLabel" bounds="10;12;377;41" fontclass="LabelFont" fontstyle="style:bold;align:center" />
-        <CONTROL type="Button" id="Spotify.Cancel" bounds="140;344;117;42" effect="" tabindex="0" enabled="true" fontclass="ButtonsFont" fontstyle="style:bold;align:center" cmlaction="Spotify.Cancel" />
-        <CONTROL type="DynButton" id="DynamicButton1" bounds="39;64;320;47" effect="" tabindex="0" enabled="true" off="dynamicButtonOff" down="dynamicButtonOn" cmlaction="Spotify.Choice1" fontclass="ButtonsFont" fontstyle="style:bold;align:center" />
-        <CONTROL type="DynButton" id="DynamicButton2" bounds="39;120;320;47" effect="" tabindex="0" enabled="true" off="dynamicButtonOff" down="dynamicButtonOn" cmlaction="Spotify.Choice2" fontclass="ButtonsFont" fontstyle="style:bold;align:center" />
-        <CONTROL type="DynButton" id="DynamicButton3" bounds="39;176;320;47" effect="" tabindex="0" enabled="true" off="dynamicButtonOff" down="dynamicButtonOn" cmlaction="Spotify.Choice3" fontclass="ButtonsFont" fontstyle="style:bold;align:center" />
-        <CONTROL type="DynButton" id="DynamicButton4" bounds="39;232;320;47" effect="" tabindex="0" enabled="true" off="dynamicButtonOff" down="dynamicButtonOn" cmlaction="Spotify.Choice4" fontclass="ButtonsFont" fontstyle="style:bold;align:center" />
-        <CONTROL type="DynButton" id="DynamicButton5" bounds="39;288;320;47" effect="" tabindex="0" enabled="true" off="dynamicButtonOff" down="dynamicButtonOn" cmlaction="Spotify.Choice5" fontclass="ButtonsFont" fontstyle="style:bold;align:center" />
+        <CONTROL type="Label"   id="Spotify.TitleLabel" bounds=" 10; 12;377;41" fontclass="LabelFont" fontstyle="style:bold;align:center" />
+        <CONTROL type="Button"    id="Spotify.Cancel"   bounds="140;344;117;42" effect="" tabindex="0" enabled="true" fontclass="ButtonsFont" fontstyle="style:bold;align:center" cmlaction="Spotify.Cancel" />
+        <CONTROL type="DynButton" id="DynamicButton1"   bounds=" 39; 64;320;47" effect="" tabindex="0" enabled="true" off="dynamicButtonOff" down="dynamicButtonOn" cmlaction="Spotify.Choice1" fontclass="ButtonsFont" fontstyle="style:bold;align:center" />
+        <CONTROL type="DynButton" id="DynamicButton2"   bounds=" 39;120;320;47" effect="" tabindex="0" enabled="true" off="dynamicButtonOff" down="dynamicButtonOn" cmlaction="Spotify.Choice2" fontclass="ButtonsFont" fontstyle="style:bold;align:center" />
+        <CONTROL type="DynButton" id="DynamicButton3"   bounds=" 39;176;320;47" effect="" tabindex="0" enabled="true" off="dynamicButtonOff" down="dynamicButtonOn" cmlaction="Spotify.Choice3" fontclass="ButtonsFont" fontstyle="style:bold;align:center" />
+        <CONTROL type="DynButton" id="DynamicButton4"   bounds=" 39;232;320;47" effect="" tabindex="0" enabled="true" off="dynamicButtonOff" down="dynamicButtonOn" cmlaction="Spotify.Choice4" fontclass="ButtonsFont" fontstyle="style:bold;align:center" />
+        <CONTROL type="DynButton" id="DynamicButton5"   bounds=" 39;288;320;47" effect="" tabindex="0" enabled="true" off="dynamicButtonOff" down="dynamicButtonOn" cmlaction="Spotify.Choice5" fontclass="ButtonsFont" fontstyle="style:bold;align:center" />
       </CONTROLS>
     </DIALOG>
   </DIALOGS>

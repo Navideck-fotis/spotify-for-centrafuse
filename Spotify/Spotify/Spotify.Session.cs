@@ -17,10 +17,13 @@ namespace Spotify
             session.ConnectionError += new SessionEventHandler(session_ConnectionError);
             session.Exception += new SessionEventHandler(session_Exception);
             session.PlayTokenLost += new SessionEventHandler(session_PlayTokenLost);
+            session.ConnectionstateUpdated += new SessionEventHandler(session_ConnectionstateUpdated);          //LK, 11-jun-2016: Added missing session events
+            session.PrivateSessionModeChanged += new SessionEventHandler(session_PrivateSessionModeChanged);    //LK, 11-jun-2016: Added missing session events
         }
 
         void session_LogoutComplete(ISession sender, SessionEventArgs e)
         {
+            WriteLog("Logout completed");
             loginComplete = false;
         }
 
@@ -28,7 +31,25 @@ namespace Spotify
         {
             this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
                 {
-                    CF_displayMessage("Play token lost! What do we do???" + Environment.NewLine + e.Status.ToString() + Environment.NewLine + e.Message);
+                    WriteLog("Play token lost: " + e.Message + ", status = " + e.Status.ToString());
+                    CF_displayMessage(pluginLang.ReadField("/AppLang/Spotify/PlayTokenLost"));
+                    Pause();
+                }));
+        }
+
+        void session_ConnectionstateUpdated(ISession sender, SessionEventArgs e)
+        {
+            this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
+                {
+                    WriteLog("Connection state Update: " + e.Message + ", status = " + e.Status.ToString());
+                }));
+        }
+
+        void session_PrivateSessionModeChanged(ISession sender, SessionEventArgs e)
+        {
+            this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
+                {
+                    WriteLog("Private session mode changed: " + e.Message + ", status = " + e.Status.ToString());
                 }));
         }
 
@@ -43,13 +64,14 @@ namespace Spotify
 
         void session_ConnectionError(ISession sender, SessionEventArgs e)
         {
-            
+                    WriteLog(e.Message + ", status = " + e.Status.ToString());
         }
 
         void session_MessageToUser(ISession sender, SessionEventArgs e)
         {
             this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
                 {
+                    WriteLog(e.Message);
                     CF_displayMessage(e.Message);
                 }));
         }
@@ -59,6 +81,7 @@ namespace Spotify
         {
             this.ParentForm.BeginInvoke(new MethodInvoker(() =>
                 {
+                    WriteLog(e.Message + ", status = " + e.Status.ToString());
                     if (e.Status != sp_error.OK)
                     {
                         CF_displayMessage("Login Failed: " + e.Status + Environment.NewLine + e.Message);
@@ -75,12 +98,13 @@ namespace Spotify
         {
             this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
                 {
+                    WriteLog("Login completed");
                     loginComplete = true;
                     CF_systemCommand(centrafuse.Plugins.CF_Actions.HIDEINFO);
                     if (firstLogin)
                     {
                         firstLogin = false;
-                        RestoreNowPlaying();
+                        RestoreNowPlaying(true);
                     }
                 }));
         }

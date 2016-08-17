@@ -1,0 +1,61 @@
+﻿<APPLANG>
+  <SPOTIFY>
+    <DISPLAYNAME>Spotify</DISPLAYNAME>
+    <DESCRIPTION>Spotify Client für Centrafuse</DESCRIPTION>
+    <RESTORINGNOWPLAYLIST>Lade  "Now Playing" Playlist</RESTORINGNOWPLAYLIST>
+    <FAILEDTORESTORENOWPLAYLIST>"Das Laden "Now Playing" Liste ist fehlgeschlagen:: "</FAILEDTORESTORENOWPLAYLIST>
+    <WaitForConnection>Bitte warten ...</WaitForConnection>
+    <CONNECTING>Wir verbinden Sie mit Spotify</CONNECTING>
+    <WAITFORCONNECTION>ir verbinden Sie mit Spotify: Bitte warten ...</WAITFORCONNECTION>
+    <LOGGINGIN>Anmelden</LOGGINGIN>
+    <SEARCHFOR>Suche nach: </SEARCHFOR>
+    <USENAMENOTSPECIFIED>Benutzername nicht angegeben</USENAMENOTSPECIFIED>
+    <SONGS>Lieder</SONGS>
+    <ALBUMS>Alben</ALBUMS>
+    <ARTISTS>Artisten</ARTISTS>
+    <PLAYLISTS>Wiedergabelisten</PLAYLISTS>
+    <STARREDSONGS>Ihre Lieblingslieder</STARREDSONGS>
+    <RETRIEVETOPLISTOF>Abrufen Top-Liste der:</RETRIEVETOPLISTOF>
+    <RETRIEVEINBOXOF>Abrufen Posteingang der:</RETRIEVEINBOXOF>
+    <CANTADDMULTIPLEALBUMS>Kann nicht mehrere Alben auf einmal hinzufügen</CANTADDMULTIPLEALBUMS>
+    <CANTADDMULTIPLEARTISTS>Kann nicht mehrere Artisten auf einmal hinzufügen</CANTADDMULTIPLEARTISTS>
+    <CANTADDMULTIPLEPLAYLISTS>Kann nicht mehrere Wiedergabelisten auf einmal hinzufügen</CANTADDMULTIPLEPLAYLISTS>
+    <CONFIRMCLEARPLAYLIST>Sind Sie sicher, dass Sie die Wiedergabeliste zu löschen??</CONFIRMCLEARPLAYLIST>
+    <CONFIRMOFFLINEPLAYLIST>Möchten Sie das afpeellijst lokal zu machen?</CONFIRMOFFLINEPLAYLIST>
+    <CONFIRMUNAVAILOFFLINEPLAYLIST>Diese Playlist soll nicht mehr lokal zur Verfügung stehen; Weiter ?</CONFIRMUNAVAILOFFLINEPLAYLIST>
+    <CONFIRMADDMULTIPLETRACKS>Sie sind dabei, {0} Titel hinzuzufügen , {1} Sind Sie sicher?</CONFIRMADDMULTIPLETRACKS>
+    <CONFIRMNOWPLAYINGLISTNOTLOADED>Sie sind dabei einen nicht reparierten Playlist zu überschreiben; vorher ausgewählten Titel werden gelöscht!</CONFIRMNOWPLAYINGLISTNOTLOADED>
+    <NOOFFLINETRACKSAVAILABLE>Keine der Titels ist lokal verfügbar</NOOFFLINETRACKSAVAILABLE>
+    <TRACKNOTAVAILABLEOFFLINE>Der Titel ist nicht (mehr) lokal verfügbar</TRACKNOTAVAILABLEOFFLINE>
+    <OPERATIONTIMEDOUT>Der Betrieb dauerte zu lange ; versuchen Sie es erneut bitte</OPERATIONTIMEDOUT>
+    <PLAYTOKENLOST>Ihr Konto wird anderswo verwendet; Wiedergabe pausiert</PLAYTOKENLOST>
+    <NOTLOGGEDIN>Sie sind nicht angemeldet</NOTLOGGEDIN>
+    <NEEDTOBEONLINE>Sie müssen online sein</NEEDTOBEONLINE>
+    <SEARCHING>Suchen...</SEARCHING>
+    <SEARCHBYSONGNAME>Suche nach Song-Name</SEARCHBYSONGNAME>
+    <SEARCHBYALBUMNAME>Suche nach Albumname</SEARCHBYALBUMNAME>
+    <SEARCHBYARTISTNAME>Suche nach Artistname</SEARCHBYARTISTNAME>
+    <SEARCHBYPLAYLISTNAME>Suche nach Playlist-Name</SEARCHBYPLAYLISTNAME>
+    <RETRIEVINGINBOX>Erhalten Sie in Ihrem Posteingang in</RETRIEVINGINBOX>
+    <RETRIEVINGSTARREDSONGS>Empfangen Sie Ihre Lieblingstitel</RETRIEVINGSTARREDSONGS>
+    <RETRIEVINGPLAYLISTS>Empfangen Sie Ihre Wiedergabelisten</RETRIEVINGPLAYLISTS>
+    <RETRIEVINGTOPLIST>Empfangen von der höchsten in der Liste</RETRIEVINGTOPLIST>
+    <DOWNLOADING>Herunterladen</DOWNLOADING>
+    <ONLINE>online</ONLINE>
+    <QUEUED>Warteschlange</QUEUED>
+    <OFFLINE>offline</OFFLINE>
+    <CANCEL>Abbruch</CANCEL>
+  </SPOTIFY>
+  <SETUP>
+    <TITLE>Spotify</TITLE>
+    <USERNAME>Benutzername</USERNAME>
+    <PASSWORD>Kennwort</PASSWORD>
+    <BITRATE>Bevorzugte Bitrate</BITRATE>
+    <AUTOPLAY>Wiedergabe selbsttätig anfangen</AUTOPLAY>
+    <AUTOLOOP>selbsttätige wiederholung liste</AUTOLOOP>
+    <LOCATION>Spotify Daten Ordner</LOCATION>
+    <SELECTDATAFOLDER>Wählen Sie einen Ordner für Spotify Daten</SELECTDATAFOLDER>
+    <POWERRESUMEDELAY>Verzögerung nach dem Aufwachen aus dem Schlafmodus</POWERRESUMEDELAY>
+    <LOGEVENTS>Ereignisse protokollieren</LOGEVENTS>
+  </SETUP>
+</APPLANG>
