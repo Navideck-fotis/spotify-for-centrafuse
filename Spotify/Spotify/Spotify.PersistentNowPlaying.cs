@@ -102,7 +102,7 @@ namespace Spotify
                     try
                     {
                         var pnp = PersistentNowPlaying.Load(fullPath);
-                        
+
                         var links = pnp.List.Select(l => SpotifySession.ParseLink(l)).ToList();
                         var linkToPlay = links.SingleOrDefault(l => l.ToString().Equals(pnp.CurrentSong, StringComparison.CurrentCultureIgnoreCase));
 
@@ -124,24 +124,31 @@ namespace Spotify
 
                         this.ParentForm.BeginInvoke(new MethodInvoker(delegate()
                             {
-                                SwitchToTab(Tabs.NowPlaying, GroupingType.Songs, NowPlayingTable, "Now Playing", null, true);
-                                CF_systemCommand(centrafuse.Plugins.CF_Actions.HIDEINFO);
-                                if (trackToPlay != null && !trackToPlay.IsPlaceholder)
+                                try
                                 {
-                                    PlayTrack(trackToPlay);
-                                    if (pnp.CurrentSongPosition > 5000)
+                                    SwitchToTab(Tabs.NowPlaying, GroupingType.Songs, NowPlayingTable, "Now Playing", null, true);
+                                    CF_systemCommand(centrafuse.Plugins.CF_Actions.HIDEINFO);
+                                    if (startPlaying && trackToPlay != null && !trackToPlay.IsPlaceholder)	//LK, 16-jun-2026: Only start playing when requested
                                     {
-                                        //subtract 5 seconds
-                                        var seekPosition = pnp.CurrentSongPosition - 5000;
-                                        SeekCurrentTrack((int)seekPosition);
-                                    }
+                                        PlayTrack(trackToPlay);
+                                        if (pnp.CurrentSongPosition > 5000)
+                                        {
+                                            //subtract 5 seconds
+                                            var seekPosition = pnp.CurrentSongPosition - 5000;
+                                            SeekCurrentTrack((int)seekPosition);
+                                        }
 
-                                    //[Grant] Pause after restore if auto play is disabled.
-                                    if (!autoPlay)
-                                        Pause();
+                                        //[Grant] Pause after restore if auto play is disabled.
+                                        if (!autoPlay)
+                                            Pause();
+                                    }
+                                    else
+                                        currentTrack = null;
                                 }
-                                else
-                                    currentTrack = null;
+                                catch (Exception ex)
+                                {
+                                    WriteLog("Error switching to now playing list: " + ex.Message);
+                                }
                             }));
                     }
                     catch (Exception ex)

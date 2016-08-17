@@ -191,7 +191,7 @@
 copy /y "$(TargetPath)" "D:\Program Files (x86)\Centrafuse\Centrafuse Auto\Plugins\$(ProjectName)\" /y
 copy /y "$(TargetDir)$(TargetName).pdb" "D:\Program Files (x86)\Centrafuse\Centrafuse Auto\Plugins\$(SolutionName)\"
 
-copy /y "$(TargetDir)$(TargetName).pdb" "C:\ProgramData\Centrafuse\Centrafuse Auto\Louk\DLLCache\$(SolutionName)_1.6.3\"
+copy /y "$(TargetDir)$(TargetName).pdb" "C:\ProgramData\Centrafuse\Centrafuse Auto\Louk\DLLCache\$(SolutionName)_1.6.10\"
 
 xcopy /E/y "$(ProjectDir)Skins\*.*" "D:\Program Files (x86)\Centrafuse\Centrafuse Auto\Plugins\$(SolutionName)\Skins\" 
 xcopy /E/y "$(ProjectDir)Languages\*.*" "D:\Program Files (x86)\Centrafuse\Centrafuse Auto\Plugins\$(SolutionName)\Languages\"

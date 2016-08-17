@@ -4,8 +4,9 @@
     <DESCRIPTION>Spotify Client für Centrafuse</DESCRIPTION>
     <RESTORINGNOWPLAYLIST>Lade  "Now Playing" Playlist</RESTORINGNOWPLAYLIST>
     <FAILEDTORESTORENOWPLAYLIST>"Das Laden "Now Playing" Liste ist fehlgeschlagen:: "</FAILEDTORESTORENOWPLAYLIST>
-    <PLEASEWAIT>Bitte warten ...</PLEASEWAIT>
+    <WaitForConnection>Bitte warten ...</WaitForConnection>
     <CONNECTING>Wir verbinden Sie mit Spotify</CONNECTING>
+    <WAITFORCONNECTION>ir verbinden Sie mit Spotify: Bitte warten ...</WAITFORCONNECTION>
     <LOGGINGIN>Anmelden</LOGGINGIN>
     <SEARCHFOR>Suche nach: </SEARCHFOR>
     <USENAMENOTSPECIFIED>Benutzername nicht angegeben</USENAMENOTSPECIFIED>
@@ -23,6 +24,7 @@
     <CONFIRMOFFLINEPLAYLIST>Möchten Sie das afpeellijst lokal zu machen?</CONFIRMOFFLINEPLAYLIST>
     <CONFIRMUNAVAILOFFLINEPLAYLIST>Diese Playlist soll nicht mehr lokal zur Verfügung stehen; Weiter ?</CONFIRMUNAVAILOFFLINEPLAYLIST>
     <CONFIRMADDMULTIPLETRACKS>Sie sind dabei, {0} Titel hinzuzufügen , {1} Sind Sie sicher?</CONFIRMADDMULTIPLETRACKS>
+    <CONFIRMNOWPLAYINGLISTNOTLOADED>Sie sind dabei einen nicht reparierten Playlist zu überschreiben; vorher ausgewählten Titel werden gelöscht!</CONFIRMNOWPLAYINGLISTNOTLOADED>
     <NOOFFLINETRACKSAVAILABLE>Keine der Titels ist lokal verfügbar</NOOFFLINETRACKSAVAILABLE>
     <TRACKNOTAVAILABLEOFFLINE>Der Titel ist nicht (mehr) lokal verfügbar</TRACKNOTAVAILABLEOFFLINE>
     <OPERATIONTIMEDOUT>Der Betrieb dauerte zu lange ; versuchen Sie es erneut bitte</OPERATIONTIMEDOUT>

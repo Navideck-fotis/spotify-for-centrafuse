@@ -290,6 +290,10 @@ namespace Spotify
 
         private void LoadNowPlaying()
         {
+            //LK, 15-jul-2016: Restore the now-playlist when not already done
+            if (!nowPlayingTableLoaded)
+                RestoreNowPlaying(false);
+
             int? scrollState = null;
             if(currentTrack != null)
             {
@@ -818,7 +822,10 @@ namespace Spotify
             for (int i = 0; i < timeOut/THREAD_SLEEP_INTERVAL; i++)
             {
                 if (!method())
+                {
+                    Application.DoEvents(); //LK, 22-jul-2016: Avoid the display to freeze while waiting
                     Thread.Sleep(THREAD_SLEEP_INTERVAL);
+                }
                 else
                     return;
             }

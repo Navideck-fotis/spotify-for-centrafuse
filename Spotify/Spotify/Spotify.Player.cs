@@ -92,46 +92,48 @@ namespace Spotify
             {
                 if (ShuffleOn)
                 {
-                    if (!ShuffledTracks.Any(t => t.IsAvailable))
-                        throw new Exception(pluginLang.ReadField("/AppLang/Spotify/NoOfflineTracksAvailable"));
-
-                    var nextNode = ShuffledTracks.Find(currentTrack);
-
-                    //In case the current node doesn't exist anymore, start on the top
-                    if (nextNode == null)
-                        nextNode = ShuffledTracks.First;
-
-                    while (nextNode != null && !nextNode.Value.IsAvailable)
+                    //LK, 22-jul-2016: Do not throw an exception here when no available tracks are found
+                    if (ShuffledTracks.Any(t => t.IsAvailable))
                     {
-                        nextNode = nextNode.Next;
+                        var nextNode = ShuffledTracks.Find(currentTrack);
 
-                        if (nextNode == null && loopAround)
+                        //In case the current node doesn't exist anymore, start on the top
+                        if (nextNode == null)
                             nextNode = ShuffledTracks.First;
-                    }
 
-                    if (nextNode != null)
-                        nextTrack = nextNode.Value;
+                        while (nextNode != null && !nextNode.Value.IsAvailable)
+                        {
+                            nextNode = nextNode.Next;
+
+                            if (nextNode == null && loopAround)
+                                nextNode = ShuffledTracks.First;
+                        }
+
+                        if (nextNode != null)
+                            nextTrack = nextNode.Value;
+                    }
                 }
                 else
                 {
-                    if (!NonShuffledTracks.Any(t => t.IsAvailable))
-                        throw new Exception(pluginLang.ReadField("/AppLang/Spotify/NoOfflineTracksAvailable"));
-
-                    var nextNode = NonShuffledTracks.Find(currentTrack);
-
-                    if (nextNode == null)
-                        nextNode = NonShuffledTracks.First;
-
-                    while (nextNode != null && !nextNode.Value.IsAvailable)
+                    //LK, 22-jul-2016: Do not throw an exception here when no available tracks are found
+                    if (NonShuffledTracks.Any(t => t.IsAvailable))
                     {
-                        nextNode = nextNode.Next;
+                        var nextNode = NonShuffledTracks.Find(currentTrack);
 
-                        if (nextNode == null && loopAround)
+                        if (nextNode == null)
                             nextNode = NonShuffledTracks.First;
-                    }
 
-                    if (nextNode != null)
-                        nextTrack = nextNode.Value;
+                        while (nextNode != null && !nextNode.Value.IsAvailable)
+                        {
+                            nextNode = nextNode.Next;
+
+                            if (nextNode == null && loopAround)
+                                nextNode = NonShuffledTracks.First;
+                        }
+
+                        if (nextNode != null)
+                            nextTrack = nextNode.Value;
+                    }
                 }
             }
             return nextTrack;
@@ -291,7 +293,7 @@ namespace Spotify
             set
             {
                 _isPaused = value;
-                this.CF_params.Media.mediaPlaying = !(_isPaused || player.Paused);
+                this.CF_params.Media.mediaPlaying = !(_isPaused || player.Paused || player.Stopped);    //LK, 22-jul-2016: Stopped is like paused to Centrafuse too
             }
         }
 
@@ -323,9 +325,10 @@ namespace Spotify
             else
             {
                 string message = pluginLang.ReadField("/AppLang/Spotify/TrackNotAvailableOffline");
-                WriteError(message);
+                WriteLog(message);  //LK, 22-jul-2016: Write message to module log file i.s.o. Error.log file
                 CF_displayMessage(message);
                 CF_setPlayPauseButton(true, _zone);
+                isPaused = false;
             }
         }
 

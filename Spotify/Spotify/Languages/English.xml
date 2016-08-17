@@ -4,8 +4,9 @@
     <DESCRIPTION>Spotify client for Centrafuse</DESCRIPTION>
     <RESTORINGNOWPLAYLIST>Restoring "Now Playlist" list</RESTORINGNOWPLAYLIST>
     <FAILEDTORESTORENOWPLAYLIST>"Failed to restore "Now Playing" list: "</FAILEDTORESTORENOWPLAYLIST>
-    <PLEASEWAIT>Please wait...</PLEASEWAIT>
+    <WaitForConnection>Please wait...</WaitForConnection>
     <CONNECTING>Connecting to Spotify</CONNECTING>
+    <WAITFORCONNECTION>Connecting to Spotify: Please wait...</WAITFORCONNECTION>
     <LOGGINGIN>Logging in</LOGGINGIN>
     <SEARCHFOR>Search for:</SEARCHFOR>
     <USENAMENOTSPECIFIED>Username not specified</USENAMENOTSPECIFIED>
@@ -25,6 +26,7 @@
     <NOOFFLINETRACKSAVAILABLE>No tracks available offline</NOOFFLINETRACKSAVAILABLE>
     <TRACKNOTAVAILABLEOFFLINE>Current track is not (or no longer) offline available</TRACKNOTAVAILABLEOFFLINE>
     <CONFIRMADDMULTIPLETRACKS>You are about to add {0} tracks.{1} Are you sure?</CONFIRMADDMULTIPLETRACKS>
+    <CONFIRMNOWPLAYINGLISTNOTLOADED>You are about to override an unrecovered playlist; previous selected tracks will be lost!</CONFIRMNOWPLAYINGLISTNOTLOADED>
     <OPERATIONTIMEDOUT>Operation timed out, please try again</OPERATIONTIMEDOUT>
     <PLAYTOKENLOST>Your account is used somewere else; playbak Paused</PLAYTOKENLOST>
     <NOTLOGGEDIN>You are not logged in</NOTLOGGEDIN>

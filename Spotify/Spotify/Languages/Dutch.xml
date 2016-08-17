@@ -6,6 +6,7 @@
     <FAILEDTORESTORENOWPLAYLIST>"Het laden van de "Now Playing" lijst is mislukt: "</FAILEDTORESTORENOWPLAYLIST>
     <PLEASEWAIT>Wachten A.U.B. ...</PLEASEWAIT>
     <CONNECTING>Verbinden met Spotify</CONNECTING>
+    <WAITFORCONNECTION>Verbinden met Spotify: Wachten A.U.B. ...</WAITFORCONNECTION>
     <LOGGINGIN>Bezig met inloggen</LOGGINGIN>
     <SEARCHFOR>Zoeken naar:</SEARCHFOR>
     <USENAMENOTSPECIFIED>Gebruikersnaam is niet opgegeven</USENAMENOTSPECIFIED>
@@ -23,6 +24,7 @@
     <CONFIRMOFFLINEPLAYLIST>Wil je de afpeellijst lokaal beschikbaar maken?</CONFIRMOFFLINEPLAYLIST>
     <CONFIRMUNAVAILOFFLINEPLAYLIST>Deze afspeellijst zal niet langer lokaal beschikbaar zijn; Doorgaan?</CONFIRMUNAVAILOFFLINEPLAYLIST>
     <CONFIRMADDMULTIPLETRACKS>Je staat op het punt om  {0} tracks toe te voegen;{1} Weet je het zeker?</CONFIRMADDMULTIPLETRACKS>
+    <CONFIRMNOWPLAYINGLISTNOTLOADED>Je staat op het punt om een niet herstelde playlist te overschrijven; eerder geselecteerde tracks gaan verloren!</CONFIRMNOWPLAYINGLISTNOTLOADED>
     <NOOFFLINETRACKSAVAILABLE>Geen van de tracks is lokaal beschikbaar</NOOFFLINETRACKSAVAILABLE>
     <TRACKNOTAVAILABLEOFFLINE>Huidige track is niet (meer) lokaal beschikbaar</TRACKNOTAVAILABLEOFFLINE>
     <OPERATIONTIMEDOUT>Handeling duurde te lang; probeer het nogmaals a.u.b.</OPERATIONTIMEDOUT>

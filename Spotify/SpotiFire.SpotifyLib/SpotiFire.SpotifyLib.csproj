@@ -119,8 +119,8 @@
     <PostBuildEvent>copy /Y "$(TargetDir)SpotiFire.SpotifyLib.dll" "D:\Program Files (x86)\Centrafuse\Centrafuse Auto\Plugins\$(SolutionName)\"
 copy /Y "$(TargetDir)$(TargetName).pdb" "D:\Program Files (x86)\Centrafuse\Centrafuse Auto\Plugins\$(SolutionName)\"
 
-del /Q "C:\ProgramData\Centrafuse\Centrafuse Auto\Louk\DLLCache\$(SolutionName)_1.6.3"
-copy /Y "$(TargetDir)$(TargetName).pdb" "C:\ProgramData\Centrafuse\Centrafuse Auto\Louk\DLLCache\$(SolutionName)_1.6.3\"
+del /Q "C:\ProgramData\Centrafuse\Centrafuse Auto\Louk\DLLCache\$(SolutionName)_1.6.7"
+copy /Y "$(TargetDir)$(TargetName).pdb" "C:\ProgramData\Centrafuse\Centrafuse Auto\Louk\DLLCache\$(SolutionName)_1.6.10\"
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

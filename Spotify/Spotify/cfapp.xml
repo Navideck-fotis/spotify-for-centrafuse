@@ -4,8 +4,8 @@
     <APPNAME>Spotify</APPNAME>
     <APPLOCATION>[CFAPPDIR]\Plugins\Spotify</APPLOCATION>
     <APPTYPE>PLUGIN</APPTYPE>
-    <VERSION>1.6.6</VERSION>
-    <REQUIRESRESTART>Fase</REQUIRESRESTART>
+    <VERSION>1.6.10</VERSION>
+    <REQUIRESRESTART>True</REQUIRESRESTART>
   </APPDATA>
   <APPFILES>
     <FILENAME register="false" overwrite="true" source="libspotify.dll" destination="[CFAPPDIR]\Plugins\Spotify\libspotify.dll" />
